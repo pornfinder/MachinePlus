@@ -1,0 +1,163 @@
+Terminals unused in grammar
+
+   m_ifdef
+   m_ifndef
+   m_else
+   m_endif
+   m_rb_o
+   m_rb_c
+   m_char
+   m_num
+
+
+Грамматика
+
+    0 $accept: commands $end
+
+    1 commands: /* пусто */
+    2         | commands m_define m_id body m_newline
+    3         | commands m_include m_libname m_newline
+    4         | commands m_include m_string m_newline
+    5         | commands m_id
+
+    6 body: /* пусто */
+
+
+Терминальные символы с правилами, в которых они появляются
+
+$end (0) 0
+error (256)
+m_newline (258) 2 3 4
+m_define (259) 2
+m_libname (260) 3
+m_include (261) 3 4
+m_ifdef (262)
+m_ifndef (263)
+m_else (264)
+m_endif (265)
+m_rb_o (266)
+m_rb_c (267)
+m_char (268)
+m_string (269) 4
+m_id (270) 2 5
+m_num (271)
+
+
+Нетерминальные символы с правилами, в которых они появляются
+
+$accept (17)
+    налево: 0
+commands (18)
+    налево: 1 2 3 4 5, направо: 0 2 3 4 5
+body (19)
+    налево: 6, направо: 2
+
+
+состояние 0
+
+    0 $accept: . commands $end
+    1 commands: .
+    2         | . commands m_define m_id body m_newline
+    3         | . commands m_include m_libname m_newline
+    4         | . commands m_include m_string m_newline
+    5         | . commands m_id
+
+    $default  вывод с использованием правила 1 (commands)
+
+    commands  переход в состояние 1
+
+
+состояние 1
+
+    0 $accept: commands . $end
+    2 commands: commands . m_define m_id body m_newline
+    3         | commands . m_include m_libname m_newline
+    4         | commands . m_include m_string m_newline
+    5         | commands . m_id
+
+    $end       сдвиг, и переход в состояние 2
+    m_define   сдвиг, и переход в состояние 3
+    m_include  сдвиг, и переход в состояние 4
+    m_id       сдвиг, и переход в состояние 5
+
+
+состояние 2
+
+    0 $accept: commands $end .
+
+    $default  accept
+
+
+состояние 3
+
+    2 commands: commands m_define . m_id body m_newline
+
+    m_id  сдвиг, и переход в состояние 6
+
+
+состояние 4
+
+    3 commands: commands m_include . m_libname m_newline
+    4         | commands m_include . m_string m_newline
+
+    m_libname  сдвиг, и переход в состояние 7
+    m_string   сдвиг, и переход в состояние 8
+
+
+состояние 5
+
+    5 commands: commands m_id .
+
+    $default  вывод с использованием правила 5 (commands)
+
+
+состояние 6
+
+    2 commands: commands m_define m_id . body m_newline
+    6 body: .
+
+    $default  вывод с использованием правила 6 (body)
+
+    body  переход в состояние 9
+
+
+состояние 7
+
+    3 commands: commands m_include m_libname . m_newline
+
+    m_newline  сдвиг, и переход в состояние 10
+
+
+состояние 8
+
+    4 commands: commands m_include m_string . m_newline
+
+    m_newline  сдвиг, и переход в состояние 11
+
+
+состояние 9
+
+    2 commands: commands m_define m_id body . m_newline
+
+    m_newline  сдвиг, и переход в состояние 12
+
+
+состояние 10
+
+    3 commands: commands m_include m_libname m_newline .
+
+    $default  вывод с использованием правила 3 (commands)
+
+
+состояние 11
+
+    4 commands: commands m_include m_string m_newline .
+
+    $default  вывод с использованием правила 4 (commands)
+
+
+состояние 12
+
+    2 commands: commands m_define m_id body m_newline .
+
+    $default  вывод с использованием правила 2 (commands)

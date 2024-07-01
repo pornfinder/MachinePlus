@@ -1,0 +1,11 @@
+sbit                    { return t_sbit; }
+sbyte|sdb               { return t_sdb; }
+sword|sdw               { return t_sdw; }
+sdword|sdd              { return t_sdd; }
+sqword|sdq              { return t_sdq; }
+
+bit                     { return t_bit; }
+byte|db                 { return t_db; }
+word|dw                 { return t_dw; }
+dword|dd                { return t_dd; }
+qword|dq                { return t_dq; }
