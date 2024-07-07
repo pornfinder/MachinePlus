@@ -6,6 +6,8 @@
 #include <fstream>
 #include <algorithm>
 #define lib
+#include <functional>
+
 #include "asm.cpp"
 
 
@@ -253,14 +255,17 @@ string execTree(node tree) {
             break;
         case _var_defn: {
             auto temp = tree.var_defn;
-            t = {"=", {execTree(*temp->vartype), execTree(*temp->value)}};
+            t = {"new", {execTree(*temp->vartype), execTree(*temp->value)}};
         }
             break;
         case _body:
             break;
         case _gettype:
             break;
-        case _assign:
+        case _assign: {
+            auto temp = tree.assign;
+            t = {""};
+        }
             break;
         case _ret:
             break;
@@ -346,4 +351,33 @@ int main(int argc, char ** argv) {
             cout << i->first << " = " << i->second.opers[0] << " " << i->second.op << " " << i->second.opers[1] << endl;
         else cout << i->first << " = " << i->second.op << " " << i->second.opers[0];
     }
+    function<long(const char*, long)> hash = [hash](const char* str, long h = 2166136261UL) {
+        return *str ? hash(str + 1, (h ^ *str) * 16777619ULL) : h;
+    };
+
+    assembler res([]{if (b16) return assembler::b16;if (b32) return assembler::b32;if (b64) return assembler::b64;throw;}());
+
+    /*
+     * -r1 = 9 + 9
+     * -r2 = 29 + -r1
+     * var = -r2
+     *
+     * xor rax, rax
+     * xor rbx, rbx
+     *
+     * mov rax, 9
+     * add rax, 9
+     *
+     *
+     *
+     */
+
+    // for(auto i : cs) {
+    //     const char* f = i.first.c_str();
+    //     expr s = i.second;
+    //     switch (hash(s.op.c_str())) {
+    //         case hash("+"):
+    //             res.add(s.opers)
+    //     }
+    // }
 }

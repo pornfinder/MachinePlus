@@ -27,7 +27,7 @@ class assembler {
 
 public:
     enum bits {b8, b16, b32, b64};
-    enum regs {_temp, _stack, _auto};
+    enum regs {_temp, _tempb, _stack, _auto};
 
     string getreg(regs type, bits bit) {
         switch (type) {
@@ -41,6 +41,18 @@ public:
                         return "eax";
                     case b64:
                         return "rax";
+                }
+            }
+            case _tempb: {
+                switch (bit) {
+                    case b8:
+                        return "bl";
+                    case b16:
+                        return "bx";
+                    case b32:
+                        return "ebx";
+                    case b64:
+                        return "rbx";
                 }
             }
             case _stack: {
@@ -160,8 +172,10 @@ public:
     }
 
     void binary(string dest, string src, string op, bool revertlast = false) {
-        if (dest == "--a") dest = getreg(_temp, getbit(vars[src].size));
-        else if (src == "--a") src = getreg(_temp, getbit(vars[dest].size));
+        if (dest == "-a*") dest = getreg(_temp, getbit(vars[src].size));
+        else if (src == "-a*") src = getreg(_temp, getbit(vars[dest].size));
+        else if (dest == "-b*") dest = getreg(_tempb, getbit(vars[src].size));
+        else if (src == "-b*") src = getreg(_tempb, getbit(vars[dest].size));
         string sa, sb;
         bool a = getvar(dest, sa), b = getvar(src, sb);
         if (a&&b) {
