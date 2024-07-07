@@ -1,0 +1,10 @@
+main.exe
+CMakeLists.txt
+cmake-build-debug
+comp.bat
+test.asm
+tester.mp
+readme.txt
+preproc.exe
+bin
+build
