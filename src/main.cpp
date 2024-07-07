@@ -9,6 +9,7 @@
 #include "asm.cpp"
 
 
+struct s_ac;
 struct s_call;
 struct s_args;
 struct s_pos;
@@ -78,6 +79,7 @@ enum comtype {
     _pos,
     _args,
     _call,
+    _ac,
     _null
 };
 
@@ -111,6 +113,8 @@ struct node {
         s_pos* pos;
         s_args* args;
         s_call* call;
+
+        s_ac* ac;
     };
 };
 #define YYERROR_VERBOSE
@@ -151,6 +155,8 @@ NODE(ret, elem expr; );
 
 NODE(pos, s_id id = {}; bool isprev = false; bool instart = false; bool inend = false; );
 
+NODE(ac, s_id com; s_args args; );
+
 template<typename T = int> T stop(T val = {}) {
     return val;
 }
@@ -160,9 +166,14 @@ void error(string err, YYLTYPE _pos);
 
 vector<string> tnames = {
     "byte",
+    "word",
+    "dword",
+    "qword",
+    "char",
     "short",
     "int",
     "long"
+
 };
 
 #include "lexer.c"
@@ -187,87 +198,63 @@ bool havefile = false;
 
 ofstream out("test.asm");
 
-struct expr {string op; vector<string> opers; bool islabel = false;};
+struct expr {string op; vector<string> opers; comtype type; node opt = *null; bool islabel = false;};
 map<string, expr> cs = {};
 
 bool isexpr(node in) {
     return in.type == _id || in.type == _num;
 }
 
+assembler::bits getsize(string s) {
+    if(s == "byte") return assembler::b8;
+    if(s == "word") return assembler::b16;
+    if(s == "dword") return assembler::b32;
+    if(s == "qword") return assembler::b64;
+    if(s == "char") return assembler::b8;
+    if(s == "short") return assembler::b16;
+    if(s == "int") return assembler::b32;
+    if(s == "long") return assembler::b64;
+    throw;
+}
+
 string execTree(node tree) {
-
-    //1+2*(3/4);
-    /*
-     *_r1 = 3 / 4
-     *_r2 = 2 * _r1
-     *_r3 = 1 + _r2
-     *result = _r3
-     *
-     */
-
-    /*
-     *mov   ax, 3
-     *idiv, ax, 4
-     *
-     *imul  ax, 2
-     *
-     *add ax, 1
-     *ret
-     */
-
-/*
- *mul
- *  | 1
- *  | plus
- *  |   | 2
- *  |   | 3
- *
- *  (1+2)*(3+4)
- *
- *  1 + 3
- *  in (1+3 return ) + 4
- *
- *  _r1 = 1 + 3
- *  _r2 = _r1 + 4
- *
- *  _r1 = 2 + 3
- *  _r2 = 1 * _r1
- *  result = _r2
- */
 
     setlocale(0, "");
 
-    string nodename = "-"s +"r" + to_string(cs.size());
+    static int count = 0;
 
+    expr t;
     switch (tree.type) {
         case _num:
         case _id: {
             auto temp = tree.id;
             return temp->value;
         }
-        case _plus: cs[nodename] = {"+"}; goto binary;
-        case _minus: cs[nodename] = {"-"}; goto binary;
-        case _mult: cs[nodename] = {"*"}; goto binary;
-        case _div: cs[nodename] = {"/"}; goto binary;
-        case _mod: cs[nodename] = {"%"}; {
-        binary:
-            auto temp = tree.plus;
-            cs[nodename].opers = {execTree(*temp->a), execTree(*temp->b)};
+        case _plus: t = {"+"}; goto binary;
+        case _minus: t = {"-"}; goto binary;
+        case _mult: t = {"*"}; goto binary;
+        case _div: t = {"/"}; goto binary;
+        case _mod: t = {"%"}; {
+            binary:
+                auto temp = tree.plus;
+            t.opers = {execTree(*temp->a), execTree(*temp->b)};
             break;
         }
         case _fun_decl:
             break;
         case _fun_defn: {
             auto temp = tree.fun_defn;
-            cs[nodename] = {temp->name.value, .islabel = true};
+            t = {temp->name.value, .islabel = true};
         }
-
             break;
         case _fun_args:
             break;
         case _var_decl:
             break;
-        case _var_defn:
+        case _var_defn: {
+            auto temp = tree.var_defn;
+            t = {"=", {execTree(*temp->vartype), execTree(*temp->value)}};
+        }
             break;
         case _body:
             break;
@@ -289,7 +276,21 @@ string execTree(node tree) {
             break;
         case _null:
             break;
+        case _ac: {
+            auto temp = tree.ac;
+            t = {temp->com.value, {[=] {
+                vector<string> res;
+                for (auto i : temp->args.args) {
+                    res.push_back(execTree(*i));
+                }
+                return res;
+            }()}};
+        }
+            break;
     }
+    t.type = tree.type;
+    string nodename = "-"s +"r" + to_string(cs.size());
+    cs[nodename] = t;
     return nodename;
 }
 // var = 9;
@@ -326,7 +327,6 @@ int main(int argc, char ** argv) {
     // cin >> e;
     // e+=";";
     // yy_switch_to_buffer(yy_scan_string(e.c_str()));
-newnode(call, ());
     //printf("Hello, World!\n");
     yyparse();
     if (haveerror) exit(1);
@@ -335,7 +335,13 @@ newnode(call, ());
 
 
 
-    for (auto i = cs.rbegin(); i != cs.rend(); ++i) {
+    for (auto il : cs) {
+        auto i = &il;
+        if (i->second.islabel) {
+            cout << i->first << ": " << endl;
+            continue;
+        }
+
         if (i->second.opers.size() == 2)
             cout << i->first << " = " << i->second.opers[0] << " " << i->second.op << " " << i->second.opers[1] << endl;
         else cout << i->first << " = " << i->second.op << " " << i->second.opers[0];

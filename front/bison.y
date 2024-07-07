@@ -75,6 +75,10 @@ void yyerror(char const * msg, YYLTYPE loc)
 %token t_seq
 %token t_lshift
 %token t_rshift
+%token t_spec
+%token t_any
+%token t_nsget
+%token t_namespace
 %token t_char
 %token t_string
 %token t_id
@@ -110,8 +114,8 @@ commands: /* empty */
 
 type_expr: t_rb_o type_expr t_rb_c { $$ = $2; }
          | t_tname { $$ = $1; }
-         | t_gettype t_smaller expr t_bigger %prec etypeof { $$ = newnode(gettype, (copy(&$3))); }
-         | t_gettype t_smaller t_bigger { yyerror("expected expression before ')' token");}
+         | t_gettype t_rb_o expr t_rb_c { yyerror("typeof is not supported"); $$ = newnode(gettype, (copy(&$3))); }
+         | t_gettype t_rb_o t_rb_c { yyerror("expected expression before ')' token");}
          ;
 
 fun_decl: flags type_expr t_id t_rb_o fun_params t_rb_c                         {$$ = newnode(fun_decl, (*$1.flags, copy(&$2), *$3.id, *$5.fun_args));};
@@ -144,7 +148,7 @@ command: fun_decl t_semi    {c.push_back($1);}
        | fun_defn           {c.push_back($1);}
        | var_decl t_semi    {c.push_back($1);}
        | var_defn t_semi    {c.push_back($1);}
-       | expr t_semi        {c.push_back($1);}
+       | asm t_semi         {c.push_back($1);}
        ;
 
 fun_params:{ yyerror("invalid arguments"); }
@@ -175,11 +179,17 @@ fun_args: expr                  { $$ = newnode(args, ({copy(&$1)})); }
         | t_void                { $$ = newnode(args, ({})); }
         ;
 
+aid: t_id { $$ = $1; }
+   | t_tname { $$ = $1; }
+
+asm: t_spec aid fun_args { $$ = newnode(ac, ( *$2.id, *$3.args ))}
+
 bodycom: var_decl t_semi            { $$ = $1; }
        | var_defn t_semi            { $$ = $1; }
        | t_return expr t_semi       { $$ = newnode(ret, (copy(&$2))); }
        | t_return t_semi            { $$ = newnode(ret, (nullptr)); }
        | expr t_semi                { $$ = $1; }
+       | asm t_semi                 { $$ = $1; }
        | error t_semi               { yyerror("invalid expression"); $$ = *null; }
        ;
 

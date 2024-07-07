@@ -84,6 +84,11 @@ asm                     { return t_asm; }
 "<="                    { return t_seq; }
 ">>"                    { return t_lshift; }
 "<<"                    { return t_rshift; }
+"$"|"\\"|"@"            { return t_spec; }
+
+"..."                   { return t_any; }
+"::"                    { return t_nsget; }
+"namespace"             { return t_namespace; }
 
  /* Обработка нормального хода программы */
 \'.\'                   { return t_char; }
