@@ -6,19 +6,12 @@ using namespace std;
 
 class assembler {
     struct instype{string com; vector<string> ops; bool islabel = false;};
-    vector<instype> ins{};
+
     struct valsizepair {string val; int size;};
+    pmr::map<string, valsizepair> data{};
     pmr::map<string, valsizepair> vars{};
     char prefix;
     int varstack = 0;
-
-    struct booked {
-        bool b8;
-        bool sb8;
-        bool b16;
-        bool b32;
-        bool b64;
-    };
 
     pmr::map<string, bool> bookregs = {
         {"", true}
@@ -26,10 +19,13 @@ class assembler {
 
 
 public:
+    vector<instype> ins{};
     enum bits {b8, b16, b32, b64};
     enum regs {_temp, _tempb, _stack, _auto};
 
-    string getreg(regs type, bits bit) {
+    bits b;
+
+    static string getreg(regs type, bits bit) {
         switch (type) {
             case _temp: {
                 switch (bit) {
@@ -68,14 +64,17 @@ public:
                 }
             }
             case _auto: {
+                throw;
             }
         }
+        throw;
     }
 
     assembler(bits mode) {
         if (mode == b16) prefix = ' ';
         else if (mode == b32) prefix = 'e';
         else prefix = 'r';
+        b = mode;
     };
 
 
@@ -85,7 +84,16 @@ public:
         varstack += size;
     }
 
-    void addnew(const assembler& coms, bool back = true) {
+    void addauto(const string op, const vector<string>& ops) {
+        if (ops.size() == 2) binary(ops[0], ops[1], op);
+        else addnew(op, ops);
+    }
+
+    void addnew(const string& com, const vector<string>& ops) {
+        ins.push_back({com, ops});
+    }
+
+    void addnew(const assembler& coms, bool back = false) {
         for (const auto& i : coms.ins) {
             if (back) ins.insert(ins.begin(), i);
             else ins.push_back(i);
@@ -94,27 +102,12 @@ public:
         varstack += coms.varstack;
     }
 
-    void addnew(const string& com, const vector<string>& ops) {
-        vector<string> sops{};
-        for (auto ii : ops) {
-            bool g = true;
-            for(auto& i : vars) {
-                if (i.first == ii) {
-                    g = false;
-                    sops.push_back(i.second.val);
-                }
-            }
-            if (g) sops.push_back(ii);
-        }
-        ins.insert(ins.begin(), {com, sops});
-    }
-
     void label(const string& lab) {
-        ins.insert(ins.begin(), {lab+":", {}, true});
+        ins.push_back({lab+":", {}, true});
     }
 
     void addnew(const string& com) {
-        ins.insert(ins.begin(), {com, {}});
+        ins.push_back({com, {}});
     }
 
     static int getint(bits bit) {
@@ -176,8 +169,10 @@ public:
         else if (src == "-a*") src = getreg(_temp, getbit(vars[dest].size));
         else if (dest == "-b*") dest = getreg(_tempb, getbit(vars[src].size));
         else if (src == "-b*") src = getreg(_tempb, getbit(vars[dest].size));
+        //
         string sa, sb;
         bool a = getvar(dest, sa), b = getvar(src, sb);
+        if(sa == sb) return;
         if (a&&b) {
             addnew(align("mov"), {getreg(_temp, getbit(vars[src].size)), sb});
             if (!revertlast) addnew(align(op), {sa, getreg(_temp, getbit(vars[src].size))});

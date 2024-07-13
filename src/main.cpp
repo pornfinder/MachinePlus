@@ -1,16 +1,16 @@
+#define lib
+
 #include <iostream>
 #include <vector>
 #include <memory>
-#include <variant>
-#define asts vector<node>
 #include <fstream>
 #include <algorithm>
-#define lib
 #include <functional>
-
 #include "asm.cpp"
 
+#define asts vector<node>
 
+struct s_braces;
 struct s_ac;
 struct s_call;
 struct s_args;
@@ -41,7 +41,9 @@ struct s_flags;
 using namespace std;
 
 string filename = "";
+
 vector<string> _split(string str, char separator = '\n');
+
 string code = "";
 #define YYSTYPE node
 struct node;
@@ -49,11 +51,13 @@ struct node;
 
 map<string, node> objects = {};
 
-template<typename T> static T* copy(T* src) {
+template<typename T>
+static T *copy(T *src) {
     return new T{*src};
 }
 
-template<typename T> static T* move(T* src) {
+template<typename T>
+static T *move(T *src) {
     auto temp = *src;
     free(src);
     return new T{temp};
@@ -82,43 +86,47 @@ enum comtype {
     _args,
     _call,
     _ac,
+    _braces,
     _null
 };
 
 struct node {
     comtype type;
     YYLTYPE loc;
+
     union {
-        s_num* num;
-        s_id* id;
-        s_plus* plus;
-        s_minus* minus;
-        s_mult* mult;
-        s_div* div;
-        s_mod* mod;
+        s_num *num;
+        s_id *id;
+        s_plus *plus;
+        s_minus *minus;
+        s_mult *mult;
+        s_div *div;
+        s_mod *mod;
 
-        s_fun_decl* fun_decl;
-        s_fun_defn* fun_defn;
-        s_fun_args* fun_args;
-        s_var_decl* var_decl;
-        s_var_defn* var_defn;
+        s_fun_decl *fun_decl;
+        s_fun_defn *fun_defn;
+        s_fun_args *fun_args;
+        s_var_decl *var_decl;
+        s_var_defn *var_defn;
 
-        s_body* body;
-        s_gettype* gettype;
+        s_body *body;
+        s_gettype *gettype;
 
-        s_assign* assign;
-        s_ret* ret;
+        s_assign *assign;
+        s_ret *ret;
 
-        s_flag* flag;
-        s_flags* flags;
+        s_flag *flag;
+        s_flags *flags;
 
-        s_pos* pos;
-        s_args* args;
-        s_call* call;
+        s_pos *pos;
+        s_args *args;
+        s_call *call;
 
-        s_ac* ac;
+        s_ac *ac;
+        s_braces *braces;
     };
 };
+
 #define YYERROR_VERBOSE
 #define UNPACK( ... ) __VA_ARGS__
 #define null new node {_null, {}}
@@ -126,44 +134,66 @@ struct node {
 #define NODE(name, body) struct s_##name {body}
 #define elem node*
 
-struct flag{enum {reserve, noreserve, fast, stack, immortal, locate, none} type; vector<elem> params = {};};
-NODE(flags, vector<s_flag*> flags; );
-NODE(flag, flag flag; );
+struct flag {
+    enum { reserve, noreserve, fast, stack, immortal, locate, none } type;
 
-NODE(num, string value; );
-NODE(id, string value; );
-NODE(plus, elem a; elem b; );
-NODE(minus, elem a; elem b; );
-NODE(mult, elem a; elem b; );
-NODE(div, elem a; elem b; );
-NODE(mod, elem a; elem b; );
+    vector<elem> params = {};
+};
 
-NODE(fun_args, vector<s_var_decl*> args; );
-NODE(args, vector<elem> args; );
-NODE(call, elem func; s_args args; );
+NODE(flags, vector<s_flag*> flags;);
 
-NODE(body, vector<node> body; );
+NODE(flag, flag flag;);
 
+NODE(num, string value;);
+
+NODE(id, string value;);
+
+NODE(plus, elem a; elem b;);
+
+NODE(minus, elem a; elem b;);
+
+NODE(mult, elem a; elem b;);
+
+NODE(div, elem a; elem b;);
+
+NODE(mod, elem a; elem b;);
+
+NODE(fun_args, vector<s_var_decl*> args;);
+
+NODE(args, vector<elem> args;);
+
+NODE(call, elem func; s_args args;);
+
+NODE(body, vector<node> body;);
 
 
 NODE(fun_decl, s_flags flags; elem rettype; s_id name; s_fun_args params;);
-NODE(fun_defn, s_flags flags; elem rettype; s_id name; s_fun_args params; s_body body; );
-NODE(var_decl, s_flags flags; elem vartype; s_id name; );
-NODE(var_defn, s_flags flags; elem vartype; s_id name; elem value; );
 
-NODE(gettype, elem value; );
-NODE(assign, elem a; elem b; );
-NODE(ret, elem expr; );
+NODE(fun_defn, s_flags flags; elem rettype; s_id name; s_fun_args params; s_body body;);
 
-NODE(pos, s_id id = {}; bool isprev = false; bool instart = false; bool inend = false; );
+NODE(var_decl, s_flags flags; elem vartype; s_id name;);
 
-NODE(ac, s_id com; s_args args; );
+NODE(var_defn, s_flags flags; elem vartype; s_id name; elem value;);
 
-template<typename T = int> T stop(T val = {}) {
+NODE(gettype, elem value;);
+
+NODE(assign, elem a; elem b;);
+
+NODE(ret, elem expr;);
+
+NODE(pos, s_id id = {}; bool isprev = false; bool instart = false; bool inend = false;);
+
+NODE(ac, s_id com; s_args args;);
+
+NODE(braces, UNPACK(enum{round, square, figure} type; elem e; ));
+
+template<typename T = int>
+T stop(T val = {}) {
     return val;
 }
 
 void error(string err, string file, YYLTYPE _pos);
+
 void error(string err, YYLTYPE _pos);
 
 vector<string> tnames = {
@@ -184,7 +214,6 @@ asts c = {};
 #include "grammar.c"
 
 
-
 using namespace std;
 
 bool noprep = false;
@@ -194,13 +223,20 @@ bool s = false;
 bool bpp = false;
 bool b16 = false;
 bool b32 = false;
-bool b64 = false;
+bool b64 = true;
 
 bool havefile = false;
 
 ofstream out("test.asm");
 
-struct expr {string op; vector<string> opers; comtype type; node opt = *null; bool islabel = false;};
+struct expr {
+    string op;
+    vector<string> opers;
+    comtype type;
+    node opt = *null;
+    bool islabel = false;
+};
+
 map<string, expr> cs = {};
 
 bool isexpr(node in) {
@@ -208,65 +244,104 @@ bool isexpr(node in) {
 }
 
 assembler::bits getsize(string s) {
-    if(s == "byte") return assembler::b8;
-    if(s == "word") return assembler::b16;
-    if(s == "dword") return assembler::b32;
-    if(s == "qword") return assembler::b64;
-    if(s == "char") return assembler::b8;
-    if(s == "short") return assembler::b16;
-    if(s == "int") return assembler::b32;
-    if(s == "long") return assembler::b64;
+    if (s == "byte") return assembler::b8;
+    if (s == "word") return assembler::b16;
+    if (s == "dword") return assembler::b32;
+    if (s == "qword") return assembler::b64;
+    if (s == "char") return assembler::b8;
+    if (s == "short") return assembler::b16;
+    if (s == "int") return assembler::b32;
+    if (s == "long") return assembler::b64;
     throw;
 }
 
 string execTree(node tree) {
-
     setlocale(0, "");
 
-    static int count = 0;
+    const function nodename = [] { return "-"s + "r" + to_string(cs.size()); };
+#define t cs[pre]
 
-    expr t;
+    string pre = nodename();
+
     switch (tree.type) {
         case _num:
         case _id: {
             auto temp = tree.id;
             return temp->value;
         }
-        case _plus: t = {"+"}; goto binary;
-        case _minus: t = {"-"}; goto binary;
-        case _mult: t = {"*"}; goto binary;
-        case _div: t = {"/"}; goto binary;
+        default: ;
+    }
+    cs[nodename()];
+    switch (tree.type) {
+        case _plus: t = {"+"};
+            goto binary;
+        case _minus: t = {"-"};
+            goto binary;
+        case _mult: t = {"*"};
+            goto binary;
+        case _div: t = {"/"};
+            goto binary;
         case _mod: t = {"%"}; {
             binary:
                 auto temp = tree.plus;
-            t.opers = {execTree(*temp->a), execTree(*temp->b)};
-            break;
-        }
+                t.opers = {execTree(*temp->a), execTree(*temp->b)};
+                break;
+            }
         case _fun_decl:
             break;
         case _fun_defn: {
             auto temp = tree.fun_defn;
             t = {temp->name.value, .islabel = true};
+            execTree(node{_body, tree.loc, .body = &temp->body});
         }
-            break;
+        break;
         case _fun_args:
             break;
         case _var_decl:
             break;
         case _var_defn: {
             auto temp = tree.var_defn;
-            t = {"new", {execTree(*temp->vartype), execTree(*temp->value)}};
+            t = {
+                [temp] -> string {
+                    for (auto i: temp->flags.flags) {
+                        switch (i->flag.type) {
+                            case flag::reserve:
+                                return "data";
+                            case flag::noreserve:
+                                return "bss";
+                            case flag::fast:
+                                return "reg";
+                            case flag::stack:
+                                return "stack";
+                            case flag::immortal:
+                                return "static";
+                            case flag::locate:
+                                error("in coming soon", i->flag.params[0]->loc);
+                            case flag::none:
+                                return "stack";
+                        }
+                    }
+                    return {};
+                }(),
+                {execTree(*temp->vartype), execTree(*temp->value)}
+            };
         }
-            break;
-        case _body:
-            break;
+        break;
+        case _body: {
+            cs.erase(pre);
+            auto temp = tree.body;
+            for (node i: temp->body) {
+                execTree(i);
+            }
+        }
+        break;
         case _gettype:
             break;
         case _assign: {
             auto temp = tree.assign;
-            t = {""};
+            t = {"=", {execTree(*temp->a), execTree(*temp->b)}};
         }
-            break;
+        break;
         case _ret:
             break;
         case _flags:
@@ -283,27 +358,100 @@ string execTree(node tree) {
             break;
         case _ac: {
             auto temp = tree.ac;
-            t = {temp->com.value, {[=] {
-                vector<string> res;
-                for (auto i : temp->args.args) {
-                    res.push_back(execTree(*i));
+            t = {
+                temp->com.value, {
+                    [=] {
+                        vector<string> res;
+                        for (auto i: temp->args.args) {
+                            res.push_back(execTree(*i));
+                        }
+                        return res;
+                    }()
                 }
-                return res;
-            }()}};
+            };
         }
-            break;
+        break;
+        default: ;
     }
-    t.type = tree.type;
-    string nodename = "-"s +"r" + to_string(cs.size());
-    cs[nodename] = t;
-    return nodename;
+    return pre;
 }
-// var = 9;
-int main(int argc, char ** argv) {
+
+constexpr long hashh(const char *str, uint32_t h = 2166136261UL) {
+    return *str ? hashh(str + 1, (h ^ *str) * 16777619ULL) : h;
+}
+
+map<string, assembler> ans{};
+
+
+
+pair<assembler, string> toasmrec(string f, expr s, assembler res) {
+    static bool b = false;
+
+    auto getreg{[&](assembler::bits regs) { return assembler::getreg(static_cast<assembler::regs>(b), regs); }};
+
+    static map<string, string> d{};
+
+    auto reg = getreg(assembler::b64);
+    d[f] = reg;
+
+    auto getaddr{
+        [&](string u) {
+            string r;
+            if (res.getvar(u, r)) return r;
+            return d[u] == "" ? move(u) : d[u];
+        }
+    };
+
+    vector<assembler> rr{};
+
+    for (auto& i: s.opers) {
+        if (i[0] == '-' && i[1] == 'r') {
+            pair<assembler, string> ar = toasmrec(i, cs[i], assembler(res.b));
+            cs.erase(i);
+            i = ar.second;
+            rr.push_back(ar.first);
+        }
+    }
+
+    sort(rr.begin(), rr.end(), [](assembler a, assembler b){return a.ins.size() > b.ins.size();});
+
+    for (auto i : rr) {
+        res.addnew(i);
+    }
+#define B_OP(op)  res.mov(reg, getaddr(s.opers[0])); res.op(reg, getaddr(s.opers[1])); b = !b; break;
+    switch (hashh(s.op.c_str())) {
+        case hashh("+"): B_OP(add)
+        case hashh("-"): B_OP(sub)
+        case hashh("*"): B_OP(imul)
+        case hashh("/"): B_OP(idiv)
+        case hashh("new"): B_OP(add)
+        default: {
+            if (s.islabel) res.label(s.op);
+            else res.addauto(s.op, s.opers);
+        }
+    }
+    res.addnew("");
+
+    return {res, reg};
+}
+
+assembler toasm() {
+    static assembler res([] {
+        if (b16) return assembler::b16;
+        if (b32) return assembler::b32;
+        if (b64) return assembler::b64;
+        throw;
+    }());
+    for (auto i: cs) {
+        res.addnew(toasmrec(i.first, i.second, res).first);
+    }
+    return res;
+}
+
+int main(int argc, char **argv) {
     --argc;
     ++argv;
-    for(int i=0; i<argc; ++i)
-    {
+    for (int i = 0; i < argc; ++i) {
 #define flag(name) if (string{argv[i]} == "--"#name){name = true; continue;}
         flag(noprep)
         flag(preponly)
@@ -335,12 +483,10 @@ int main(int argc, char ** argv) {
     //printf("Hello, World!\n");
     yyparse();
     if (haveerror) exit(1);
-    for (auto i : c)
-        execTree(i);//пашел нахюй printf тупой; cout лучше
+    for (auto i: c)
+        execTree(i); //пашел нахюй printf тупой; cout лучше
 
-
-
-    for (auto il : cs) {
+    for (auto il: cs) {
         auto i = &il;
         if (i->second.islabel) {
             cout << i->first << ": " << endl;
@@ -351,11 +497,7 @@ int main(int argc, char ** argv) {
             cout << i->first << " = " << i->second.opers[0] << " " << i->second.op << " " << i->second.opers[1] << endl;
         else cout << i->first << " = " << i->second.op << " " << i->second.opers[0];
     }
-    function<long(const char*, long)> hash = [hash](const char* str, long h = 2166136261UL) {
-        return *str ? hash(str + 1, (h ^ *str) * 16777619ULL) : h;
-    };
 
-    assembler res([]{if (b16) return assembler::b16;if (b32) return assembler::b32;if (b64) return assembler::b64;throw;}());
 
     /*
      * -r1 = 9 + 9
@@ -372,12 +514,6 @@ int main(int argc, char ** argv) {
      *
      */
 
-    // for(auto i : cs) {
-    //     const char* f = i.first.c_str();
-    //     expr s = i.second;
-    //     switch (hash(s.op.c_str())) {
-    //         case hash("+"):
-    //             res.add(s.opers)
-    //     }
-    // }
+
+    cout << toasm().tostring();
 }

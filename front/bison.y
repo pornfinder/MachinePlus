@@ -87,6 +87,7 @@ void yyerror(char const * msg, YYLTYPE loc)
 %token t_comm
 %token t_line
 
+%left erbexpr
 %right eassign
 %left eor
 %left eand
@@ -96,7 +97,7 @@ void yyerror(char const * msg, YYLTYPE loc)
 %left eplus eminus
 %left emult ediv emod
 %right enot euplus euminus egetaddr egoaddr
-%left emember eptrmember erbexpr esqexpr ecall etypeof
+%left emember eptrmember esqexpr ecall etypeof
 
 
 %%
@@ -107,16 +108,18 @@ commands: /* empty */
             {
                 if ($3.num->value == "1488")
                     printf("\namagad pashalka eshkere 1488\n");
-                else yyerror($3.num->value.c_str(), @3);
+                else yyerror("unknown pashalka", @3);
             }
         | commands t_comm
         ;
 
 type_expr: t_rb_o type_expr t_rb_c { $$ = $2; }
-         | t_tname { $$ = $1; }
-         | t_gettype t_rb_o expr t_rb_c { yyerror("typeof is not supported"); $$ = newnode(gettype, (copy(&$3))); }
-         | t_gettype t_rb_o t_rb_c { yyerror("expected expression before ')' token");}
+         | t_tname                          { $$ = $1; }
+         | t_gettype t_rb_o expr t_rb_c     { yyerror("typeof is not supported"); $$ = newnode(gettype, (copy(&$3))); }
+         | t_gettype t_rb_o t_rb_c          { yyerror("expected expression before ')' token");}
          ;
+
+
 
 fun_decl: flags type_expr t_id t_rb_o fun_params t_rb_c                         {$$ = newnode(fun_decl, (*$1.flags, copy(&$2), *$3.id, *$5.fun_args));};
 fun_defn: flags type_expr t_id t_rb_o fun_params t_rb_c body                    {$$ = newnode(fun_defn, (*$1.flags, copy(&$2), *$3.id, *$5.fun_args, *$7.body));};
@@ -193,7 +196,7 @@ bodycom: var_decl t_semi            { $$ = $1; }
        | error t_semi               { yyerror("invalid expression"); $$ = *null; }
        ;
 
-expr: t_rb_o expr t_rb_c                %prec erbexpr   {$$ = $2;}
+expr: t_rb_o expr t_rb_c                %prec erbexpr   { $$ = $2; }
     | expr t_plus expr                  %prec eplus     { $$ = newnode(plus, (copy(&$1), copy(&$3))); }
     | expr t_minus expr                 %prec eminus    { $$ = newnode(minus, (copy(&$1), copy(&$3))); }
     | expr t_mult expr                  %prec emult     { $$ = newnode(mult, (copy(&$1), copy(&$3))); }

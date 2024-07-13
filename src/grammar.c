@@ -183,31 +183,31 @@ void yyerror(char const * msg, YYLTYPE loc)
      t_num = 327,
      t_comm = 328,
      t_line = 329,
-     eassign = 330,
-     eor = 331,
-     eand = 332,
-     eneq = 333,
-     eeq = 334,
-     ebeq = 335,
-     eseq = 336,
-     ebigger = 337,
-     esmaller = 338,
-     ershift = 339,
-     elshift = 340,
-     eminus = 341,
-     eplus = 342,
-     emod = 343,
-     ediv = 344,
-     emult = 345,
-     egoaddr = 346,
-     egetaddr = 347,
-     euminus = 348,
-     euplus = 349,
-     enot = 350,
-     etypeof = 351,
-     ecall = 352,
-     esqexpr = 353,
-     erbexpr = 354,
+     erbexpr = 330,
+     eassign = 331,
+     eor = 332,
+     eand = 333,
+     eneq = 334,
+     eeq = 335,
+     ebeq = 336,
+     eseq = 337,
+     ebigger = 338,
+     esmaller = 339,
+     ershift = 340,
+     elshift = 341,
+     eminus = 342,
+     eplus = 343,
+     emod = 344,
+     ediv = 345,
+     emult = 346,
+     egoaddr = 347,
+     egetaddr = 348,
+     euminus = 349,
+     euplus = 350,
+     enot = 351,
+     etypeof = 352,
+     ecall = 353,
+     esqexpr = 354,
      eptrmember = 355,
      emember = 356
    };
@@ -560,13 +560,13 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   103,   103,   104,   105,   106,   112,   115,   116,   117,
-     118,   121,   122,   123,   124,   127,   128,   129,   130,   133,
-     134,   135,   136,   137,   138,   141,   142,   143,   144,   147,
-     148,   149,   150,   151,   154,   155,   156,   157,   160,   167,
-     168,   169,   172,   173,   174,   177,   178,   179,   182,   183,
-     185,   187,   188,   189,   190,   191,   192,   193,   196,   197,
-     198,   199,   200,   201,   202,   203,   204,   205,   206
+       0,   104,   104,   105,   106,   107,   113,   116,   117,   118,
+     119,   124,   125,   126,   127,   130,   131,   132,   133,   136,
+     137,   138,   139,   140,   141,   144,   145,   146,   147,   150,
+     151,   152,   153,   154,   157,   158,   159,   160,   163,   170,
+     171,   172,   175,   176,   177,   180,   181,   182,   185,   186,
+     188,   190,   191,   192,   193,   194,   195,   196,   199,   200,
+     201,   202,   203,   204,   205,   206,   207,   208,   209
 };
 #endif
 
@@ -586,14 +586,13 @@ static const char *const yytname[] =
   "t_nslash", "t_sb_o", "t_sb_c", "t_and", "t_or", "t_eq", "t_neq",
   "t_beq", "t_seq", "t_lshift", "t_rshift", "t_spec", "t_any", "t_nsget",
   "t_namespace", "t_char", "t_string", "t_id", "t_tname", "t_num",
-  "t_comm", "t_line", "eassign", "eor", "eand", "eneq", "eeq", "ebeq",
-  "eseq", "ebigger", "esmaller", "ershift", "elshift", "eminus", "eplus",
-  "emod", "ediv", "emult", "egoaddr", "egetaddr", "euminus", "euplus",
-  "enot", "etypeof", "ecall", "esqexpr", "erbexpr", "eptrmember",
-  "emember", "$accept", "commands", "type_expr", "fun_decl", "fun_defn",
-  "var_decl", "var_defn", "flags", "flag", "pos", "command", "fun_params",
-  "fun_param", "body", "bodycoms", "fun_args", "aid", "asm", "bodycom",
-  "expr", 0
+  "t_comm", "t_line", "erbexpr", "eassign", "eor", "eand", "eneq", "eeq",
+  "ebeq", "eseq", "ebigger", "esmaller", "ershift", "elshift", "eminus",
+  "eplus", "emod", "ediv", "emult", "egoaddr", "egetaddr", "euminus",
+  "euplus", "enot", "etypeof", "ecall", "esqexpr", "eptrmember", "emember",
+  "$accept", "commands", "type_expr", "fun_decl", "fun_defn", "var_decl",
+  "var_defn", "flags", "flag", "pos", "command", "fun_params", "fun_param",
+  "body", "bodycoms", "fun_args", "aid", "asm", "bodycom", "expr", 0
 };
 #endif
 
@@ -1619,445 +1618,445 @@ yyreduce:
         case 5:
 
 /* Line 1455 of yacc.c  */
-#line 107 "front/bison.y"
+#line 108 "front/bison.y"
     {
                 if ((yyvsp[(3) - (5)]).num->value == "1488")
                     printf("\namagad pashalka eshkere 1488\n");
-                else yyerror((yyvsp[(3) - (5)]).num->value.c_str(), (yylsp[(3) - (5)]));
+                else yyerror("unknown pashalka", (yylsp[(3) - (5)]));
             ;}
     break;
 
   case 7:
 
 /* Line 1455 of yacc.c  */
-#line 115 "front/bison.y"
+#line 116 "front/bison.y"
     { (yyval) = (yyvsp[(2) - (3)]); ;}
     break;
 
   case 8:
 
 /* Line 1455 of yacc.c  */
-#line 116 "front/bison.y"
+#line 117 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (1)]); ;}
     break;
 
   case 9:
 
 /* Line 1455 of yacc.c  */
-#line 117 "front/bison.y"
+#line 118 "front/bison.y"
     { yyerror("typeof is not supported"); (yyval) = newnode(gettype, (copy(&(yyvsp[(3) - (4)])))); ;}
     break;
 
   case 10:
 
 /* Line 1455 of yacc.c  */
-#line 118 "front/bison.y"
+#line 119 "front/bison.y"
     { yyerror("expected expression before ')' token");;}
     break;
 
   case 11:
 
 /* Line 1455 of yacc.c  */
-#line 121 "front/bison.y"
+#line 124 "front/bison.y"
     {(yyval) = newnode(fun_decl, (*(yyvsp[(1) - (6)]).flags, copy(&(yyvsp[(2) - (6)])), *(yyvsp[(3) - (6)]).id, *(yyvsp[(5) - (6)]).fun_args));;}
     break;
 
   case 12:
 
 /* Line 1455 of yacc.c  */
-#line 122 "front/bison.y"
+#line 125 "front/bison.y"
     {(yyval) = newnode(fun_defn, (*(yyvsp[(1) - (7)]).flags, copy(&(yyvsp[(2) - (7)])), *(yyvsp[(3) - (7)]).id, *(yyvsp[(5) - (7)]).fun_args, *(yyvsp[(7) - (7)]).body));;}
     break;
 
   case 13:
 
 /* Line 1455 of yacc.c  */
-#line 123 "front/bison.y"
+#line 126 "front/bison.y"
     {(yyval) = newnode(var_decl, (*(yyvsp[(1) - (3)]).flags, copy(&(yyvsp[(2) - (3)])), *(yyvsp[(3) - (3)]).id));;}
     break;
 
   case 14:
 
 /* Line 1455 of yacc.c  */
-#line 124 "front/bison.y"
+#line 127 "front/bison.y"
     {(yyval) = newnode(var_defn, (*(yyvsp[(1) - (5)]).flags, copy(&(yyvsp[(2) - (5)])), *(yyvsp[(3) - (5)]).id, copy(&(yyvsp[(5) - (5)]))));;}
     break;
 
   case 15:
 
 /* Line 1455 of yacc.c  */
-#line 127 "front/bison.y"
+#line 130 "front/bison.y"
     { (yyval) = newnode(flags, ()); ;}
     break;
 
   case 16:
 
 /* Line 1455 of yacc.c  */
-#line 128 "front/bison.y"
+#line 131 "front/bison.y"
     { (yyval) = newnode(flags, ()); ;}
     break;
 
   case 17:
 
 /* Line 1455 of yacc.c  */
-#line 129 "front/bison.y"
+#line 132 "front/bison.y"
     { (yyval).flags->flags.push_back((yyvsp[(2) - (2)]).flag); ;}
     break;
 
   case 18:
 
 /* Line 1455 of yacc.c  */
-#line 130 "front/bison.y"
+#line 133 "front/bison.y"
     { (yyval) = newnode(flags, ({(yyvsp[(1) - (1)]).flag})); ;}
     break;
 
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 133 "front/bison.y"
+#line 136 "front/bison.y"
     { (yyval) = newnode(flag, (flag::reserve)); ;}
     break;
 
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 134 "front/bison.y"
+#line 137 "front/bison.y"
     { (yyval) = newnode(flag, (flag::noreserve)); ;}
     break;
 
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 135 "front/bison.y"
+#line 138 "front/bison.y"
     { (yyval) = newnode(flag, (flag::fast)); ;}
     break;
 
   case 22:
 
 /* Line 1455 of yacc.c  */
-#line 136 "front/bison.y"
+#line 139 "front/bison.y"
     { (yyval) = newnode(flag, (flag::stack)); ;}
     break;
 
   case 23:
 
 /* Line 1455 of yacc.c  */
-#line 137 "front/bison.y"
+#line 140 "front/bison.y"
     { (yyval) = newnode(flag, (flag::locate, {copy(&(yyvsp[(2) - (2)]))})); ;}
     break;
 
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 138 "front/bison.y"
+#line 141 "front/bison.y"
     { (yyval) = newnode(flag, (flag::immortal)); ;}
     break;
 
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 141 "front/bison.y"
+#line 144 "front/bison.y"
     { (yyval) = newnode(pos, (.id = (yyvsp[(2) - (3)]).id->value)); ;}
     break;
 
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 142 "front/bison.y"
+#line 145 "front/bison.y"
     { (yyval) = newnode(pos, (.id = (yyvsp[(2) - (4)]).id->value, .isprev = true)); ;}
     break;
 
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 143 "front/bison.y"
+#line 146 "front/bison.y"
     { (yyval) = newnode(pos, (.inend = true)); ;}
     break;
 
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 144 "front/bison.y"
+#line 147 "front/bison.y"
     { (yyval) = newnode(pos, (.instart = true)); ;}
     break;
 
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 147 "front/bison.y"
+#line 150 "front/bison.y"
     {c.push_back((yyvsp[(1) - (2)]));;}
     break;
 
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 148 "front/bison.y"
+#line 151 "front/bison.y"
     {c.push_back((yyvsp[(1) - (1)]));;}
     break;
 
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 149 "front/bison.y"
+#line 152 "front/bison.y"
     {c.push_back((yyvsp[(1) - (2)]));;}
     break;
 
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 150 "front/bison.y"
+#line 153 "front/bison.y"
     {c.push_back((yyvsp[(1) - (2)]));;}
     break;
 
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 151 "front/bison.y"
+#line 154 "front/bison.y"
     {c.push_back((yyvsp[(1) - (2)]));;}
     break;
 
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 154 "front/bison.y"
+#line 157 "front/bison.y"
     { yyerror("invalid arguments"); ;}
     break;
 
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 155 "front/bison.y"
+#line 158 "front/bison.y"
     { (yyval) = newnode(fun_args, ()) ;}
     break;
 
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 156 "front/bison.y"
+#line 159 "front/bison.y"
     { (yyval) = newnode(fun_args, ({copy((yyvsp[(1) - (1)]).var_decl)})); ;}
     break;
 
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 157 "front/bison.y"
+#line 160 "front/bison.y"
     { (yyval).fun_args->args.push_back(copy((yyvsp[(3) - (3)]).var_decl)); ;}
     break;
 
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 160 "front/bison.y"
+#line 163 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (1)]); ;}
     break;
 
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 167 "front/bison.y"
+#line 170 "front/bison.y"
     { (yyval) = (yyvsp[(2) - (3)]) ;}
     break;
 
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 168 "front/bison.y"
+#line 171 "front/bison.y"
     { (yyval) = newnode(body, ()); ;}
     break;
 
   case 41:
 
 /* Line 1455 of yacc.c  */
-#line 169 "front/bison.y"
+#line 172 "front/bison.y"
     { yyerror("invalid body"); (yyval) = *null; ;}
     break;
 
   case 42:
 
 /* Line 1455 of yacc.c  */
-#line 172 "front/bison.y"
+#line 175 "front/bison.y"
     { (yyval) = newnode(body, ({(yyvsp[(1) - (1)])})); ;}
     break;
 
   case 43:
 
 /* Line 1455 of yacc.c  */
-#line 173 "front/bison.y"
+#line 176 "front/bison.y"
     { (yyval).body->body.push_back((yyvsp[(2) - (2)])); ;}
     break;
 
   case 45:
 
 /* Line 1455 of yacc.c  */
-#line 177 "front/bison.y"
+#line 180 "front/bison.y"
     { (yyval) = newnode(args, ({copy(&(yyvsp[(1) - (1)]))})); ;}
     break;
 
   case 46:
 
 /* Line 1455 of yacc.c  */
-#line 178 "front/bison.y"
+#line 181 "front/bison.y"
     { (yyval).args->args.push_back(copy(&(yyvsp[(3) - (3)]))); ;}
     break;
 
   case 47:
 
 /* Line 1455 of yacc.c  */
-#line 179 "front/bison.y"
+#line 182 "front/bison.y"
     { (yyval) = newnode(args, ({})); ;}
     break;
 
   case 48:
 
 /* Line 1455 of yacc.c  */
-#line 182 "front/bison.y"
+#line 185 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (1)]); ;}
     break;
 
   case 49:
 
 /* Line 1455 of yacc.c  */
-#line 183 "front/bison.y"
+#line 186 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (1)]); ;}
     break;
 
   case 50:
 
 /* Line 1455 of yacc.c  */
-#line 185 "front/bison.y"
+#line 188 "front/bison.y"
     { (yyval) = newnode(ac, ( *(yyvsp[(2) - (3)]).id, *(yyvsp[(3) - (3)]).args ));}
     break;
 
   case 51:
 
 /* Line 1455 of yacc.c  */
-#line 187 "front/bison.y"
+#line 190 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (2)]); ;}
     break;
 
   case 52:
 
 /* Line 1455 of yacc.c  */
-#line 188 "front/bison.y"
+#line 191 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (2)]); ;}
     break;
 
   case 53:
 
 /* Line 1455 of yacc.c  */
-#line 189 "front/bison.y"
+#line 192 "front/bison.y"
     { (yyval) = newnode(ret, (copy(&(yyvsp[(2) - (3)])))); ;}
     break;
 
   case 54:
 
 /* Line 1455 of yacc.c  */
-#line 190 "front/bison.y"
+#line 193 "front/bison.y"
     { (yyval) = newnode(ret, (nullptr)); ;}
     break;
 
   case 55:
 
 /* Line 1455 of yacc.c  */
-#line 191 "front/bison.y"
+#line 194 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (2)]); ;}
     break;
 
   case 56:
 
 /* Line 1455 of yacc.c  */
-#line 192 "front/bison.y"
+#line 195 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (2)]); ;}
     break;
 
   case 57:
 
 /* Line 1455 of yacc.c  */
-#line 193 "front/bison.y"
+#line 196 "front/bison.y"
     { yyerror("invalid expression"); (yyval) = *null; ;}
     break;
 
   case 58:
 
 /* Line 1455 of yacc.c  */
-#line 196 "front/bison.y"
-    {(yyval) = (yyvsp[(2) - (3)]);;}
+#line 199 "front/bison.y"
+    { (yyval) = (yyvsp[(2) - (3)]); ;}
     break;
 
   case 59:
 
 /* Line 1455 of yacc.c  */
-#line 197 "front/bison.y"
+#line 200 "front/bison.y"
     { (yyval) = newnode(plus, (copy(&(yyvsp[(1) - (3)])), copy(&(yyvsp[(3) - (3)])))); ;}
     break;
 
   case 60:
 
 /* Line 1455 of yacc.c  */
-#line 198 "front/bison.y"
+#line 201 "front/bison.y"
     { (yyval) = newnode(minus, (copy(&(yyvsp[(1) - (3)])), copy(&(yyvsp[(3) - (3)])))); ;}
     break;
 
   case 61:
 
 /* Line 1455 of yacc.c  */
-#line 199 "front/bison.y"
+#line 202 "front/bison.y"
     { (yyval) = newnode(mult, (copy(&(yyvsp[(1) - (3)])), copy(&(yyvsp[(3) - (3)])))); ;}
     break;
 
   case 62:
 
 /* Line 1455 of yacc.c  */
-#line 200 "front/bison.y"
+#line 203 "front/bison.y"
     { (yyval) = newnode(div, (copy(&(yyvsp[(1) - (3)])), copy(&(yyvsp[(3) - (3)])))); ;}
     break;
 
   case 63:
 
 /* Line 1455 of yacc.c  */
-#line 201 "front/bison.y"
+#line 204 "front/bison.y"
     { (yyval) = newnode(mod, (copy(&(yyvsp[(1) - (3)])), copy(&(yyvsp[(3) - (3)])))); ;}
     break;
 
   case 64:
 
 /* Line 1455 of yacc.c  */
-#line 202 "front/bison.y"
+#line 205 "front/bison.y"
     { stop(vector({(yyvsp[(1) - (4)]), (yyvsp[(2) - (4)]), (yyvsp[(3) - (4)]), (yyvsp[(4) - (4)])})); (yyval) = newnode(call, (copy(&(yyvsp[(1) - (4)])), {}));;}
     break;
 
   case 65:
 
 /* Line 1455 of yacc.c  */
-#line 203 "front/bison.y"
+#line 206 "front/bison.y"
     { (yyval) = newnode(assign, (copy(&(yyvsp[(1) - (3)])), copy(&(yyvsp[(3) - (3)])))); ;}
     break;
 
   case 66:
 
 /* Line 1455 of yacc.c  */
-#line 204 "front/bison.y"
+#line 207 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (1)]); ;}
     break;
 
   case 67:
 
 /* Line 1455 of yacc.c  */
-#line 205 "front/bison.y"
+#line 208 "front/bison.y"
     { (yyval) = (yyvsp[(1) - (1)]); ;}
     break;
 
   case 68:
 
 /* Line 1455 of yacc.c  */
-#line 206 "front/bison.y"
+#line 209 "front/bison.y"
     { yyerror("invalid expression"); (yyval) = *null; ;}
     break;
 
 
 
 /* Line 1455 of yacc.c  */
-#line 2061 "src/grammar.c"
+#line 2060 "src/grammar.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -2276,5 +2275,5 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 208 "front/bison.y"
+#line 211 "front/bison.y"
 
