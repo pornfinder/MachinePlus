@@ -43,16 +43,18 @@
      m_define = 259,
      m_libname = 260,
      m_include = 261,
-     m_ifdef = 262,
-     m_ifndef = 263,
-     m_else = 264,
-     m_endif = 265,
-     m_rb_o = 266,
-     m_rb_c = 267,
-     m_char = 268,
-     m_string = 269,
-     m_id = 270,
-     m_num = 271
+     m_builtin = 262,
+     m_ifdef = 263,
+     m_ifndef = 264,
+     m_else = 265,
+     m_endif = 266,
+     m_rb_o = 267,
+     m_rb_c = 268,
+     m_char = 269,
+     m_string = 270,
+     m_id = 271,
+     m_num = 272,
+     m_sharp = 273
    };
 #endif
 
@@ -65,7 +67,7 @@ typedef int YYSTYPE;
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
-extern YYSTYPE yylval;
+extern YYSTYPE pplval;
 
 #if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
 typedef struct YYLTYPE
@@ -80,5 +82,5 @@ typedef struct YYLTYPE
 # define YYLTYPE_IS_TRIVIAL 1
 #endif
 
-extern YYLTYPE yylloc;
+extern YYLTYPE pplloc;
 

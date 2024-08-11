@@ -1,6 +1,7 @@
 Nonterminals useless in grammar
 
    mbsbody
+   asmcom
 
 
 Terminals unused in grammar
@@ -25,7 +26,6 @@ Terminals unused in grammar
    t_bytes
    t_sbytes
    t_bits
-   t_asm
    t_addr
    t_dot
    t_slash
@@ -36,53 +36,55 @@ Terminals unused in grammar
    t_neq
    t_beq
    t_seq
-   t_lshift
    t_rshift
+   t_spec
    t_any
    t_nsget
    t_namespace
    t_char
    t_string
+   t_notdefined
    t_line
-   eor
-   eand
-   eneq
-   eeq
-   ebeq
-   eseq
-   ebigger
-   esmaller
-   ershift
-   elshift
+   erbexpr
+   eplus
+   eminus
+   emult
+   ediv
+   emod
+   ecall
+   eassign
+   t_rbexpr
    egoaddr
    egetaddr
    euminus
    euplus
-   enot
+   t_not
    etypeof
    esqexpr
-   eptrmember
-   emember
+   t_ptrmember
+   t_member
 
 
 Rules useless in grammar
 
-   68 mbsbody: body
-   69        | expr t_semi
+   70 mbsbody: body
+   71        | expr t_semi
+
+   72 asmcom: aid fun_args
 
 
-Состояние 1 конфликты: 6 сдвига/вывода
-Состояние 69 конфликты: 6 сдвига/вывода
-Состояние 73 конфликты: 7 сдвига/вывода
-Состояние 74 конфликты: 7 сдвига/вывода
-Состояние 75 конфликты: 7 сдвига/вывода
-Состояние 76 конфликты: 7 сдвига/вывода
-Состояние 77 конфликты: 7 сдвига/вывода
-Состояние 78 конфликты: 7 сдвига/вывода
-Состояние 89 конфликты: 6 сдвига/вывода
-Состояние 94 конфликты: 7 сдвига/вывода
-Состояние 96 конфликты: 1 сдвига/вывода
-Состояние 102 конфликты: 7 сдвига/вывода
+Состояние 2 конфликты: 6 сдвига/вывода
+Состояние 73 конфликты: 6 сдвига/вывода
+Состояние 77 конфликты: 1 сдвига/вывода
+Состояние 78 конфликты: 1 сдвига/вывода
+Состояние 79 конфликты: 1 сдвига/вывода
+Состояние 80 конфликты: 1 сдвига/вывода
+Состояние 81 конфликты: 1 сдвига/вывода
+Состояние 82 конфликты: 1 сдвига/вывода
+Состояние 93 конфликты: 6 сдвига/вывода
+Состояние 98 конфликты: 7 сдвига/вывода
+Состояние 100 конфликты: 1 сдвига/вывода
+Состояние 106 конфликты: 7 сдвига/вывода
 
 
 Грамматика
@@ -94,92 +96,94 @@ Rules useless in grammar
     3         | commands t_semi
     4         | commands t_meme t_assign t_num t_semi
     5         | commands t_comm
+    6         | error t_semi
 
-    6 type_expr: t_rb_o type_expr t_rb_c
-    7          | t_tname
-    8          | t_gettype t_rb_o expr t_rb_c
-    9          | t_gettype t_rb_o t_rb_c
+    7 type_expr: t_rb_o type_expr t_rb_c
+    8          | t_tname
+    9          | t_gettype t_rb_o expr t_rb_c
+   10          | t_gettype t_rb_o t_rb_c
 
-   10 fun_decl: flags type_expr t_id t_rb_o fun_params t_rb_c
+   11 fun_decl: flags type_expr t_id t_rb_o fun_params t_rb_c
 
-   11 fun_defn: flags type_expr t_id t_rb_o fun_params t_rb_c body
+   12 fun_defn: flags type_expr t_id t_rb_o fun_params t_rb_c body
 
-   12 var_decl: flags type_expr t_id
+   13 var_decl: flags type_expr t_id
 
-   13 var_defn: flags type_expr t_id t_assign expr
+   14 var_defn: flags type_expr t_id t_assign expr
 
-   14 flags: /* пусто */
-   15      | t_auto
-   16      | flags flag
-   17      | flag
+   15 flags: /* пусто */
+   16      | t_auto
+   17      | flags flag
+   18      | flag
 
-   18 flag: t_reserve
-   19     | t_noreserve
-   20     | t_fast
-   21     | t_stack
-   22     | t_locate pos
-   23     | t_immortal
+   19 flag: t_reserve
+   20     | t_noreserve
+   21     | t_fast
+   22     | t_stack
+   23     | t_locate pos
+   24     | t_immortal
 
-   24 pos: t_rb_o t_id t_rb_c
-   25    | t_rb_o t_id t_rb_c t_neg
-   26    | t_sb_o t_bigger t_sb_c
-   27    | t_sb_o t_smaller t_sb_c
+   25 pos: t_rb_o t_id t_rb_c
+   26    | t_rb_o t_id t_rb_c t_neg
+   27    | t_sb_o t_bigger t_sb_c
+   28    | t_sb_o t_smaller t_sb_c
 
-   28 command: fun_decl t_semi
-   29        | fun_defn
-   30        | var_decl t_semi
-   31        | var_defn t_semi
-   32        | asm t_semi
+   29 command: fun_decl t_semi
+   30        | fun_defn
+   31        | var_decl t_semi
+   32        | var_defn t_semi
+   33        | asm t_semi
 
-   33 fun_params: /* пусто */
-   34           | t_void
-   35           | fun_param
-   36           | fun_params t_comma fun_param
+   34 fun_params: /* пусто */
+   35           | t_void
+   36           | fun_param
+   37           | fun_params t_comma fun_param
 
-   37 fun_param: var_decl
+   38 fun_param: var_decl
 
-   38 body: t_fb_o bodycoms t_fb_c
-   39     | t_fb_o t_fb_c
-   40     | error
+   39 body: t_fb_o bodycoms t_fb_c
+   40     | t_fb_o t_fb_c
+   41     | error
 
-   41 bodycoms: bodycom
-   42         | bodycoms bodycom
-   43         | bodycoms t_semi
+   42 bodycoms: bodycom
+   43         | bodycoms bodycom
+   44         | bodycoms t_semi
 
-   44 fun_args: expr
-   45         | fun_args t_comma expr
-   46         | t_void
+   45 fun_args: expr
+   46         | fun_args t_comma expr
+   47         | t_void
 
-   47 aid: t_id
-   48    | t_tname
+   48 aid: t_id
+   49    | t_tname
 
-   49 asm: t_spec aid fun_args
+   50 asm: t_lshift aid fun_args
+   51    | t_asm t_fb_o
 
-   50 bodycom: var_decl t_semi
-   51        | var_defn t_semi
-   52        | t_return expr t_semi
-   53        | t_return t_semi
-   54        | expr t_semi
-   55        | asm t_semi
-   56        | error t_semi
+   52 bodycom: var_decl t_semi
+   53        | var_defn t_semi
+   54        | t_return expr t_semi
+   55        | t_return t_semi
+   56        | expr t_semi
+   57        | asm t_semi
+   58        | error t_semi
 
-   57 expr: t_rb_o expr t_rb_c
-   58     | expr t_plus expr
-   59     | expr t_minus expr
-   60     | expr t_mult expr
-   61     | expr t_div expr
-   62     | expr t_mod expr
-   63     | expr t_rb_o fun_args t_rb_c
-   64     | expr t_assign expr
-   65     | t_num
-   66     | t_id
-   67     | error
+   59 expr: t_rb_o expr t_rb_c
+   60     | expr t_plus expr
+   61     | expr t_minus expr
+   62     | expr t_mult expr
+   63     | expr t_div expr
+   64     | expr t_mod expr
+   65     | expr t_rb_o fun_args t_rb_c
+   66     | expr t_assign expr
+   67     | t_num
+   68     | t_id
+   69     | error
 
 
 Терминальные символы с правилами, в которых они появляются
 
 $end (0) 0
-error (256) 40 56 67
+error (256) 6 41 58 69
 t_screening (258)
 t_if (259)
 t_elseif (260)
@@ -187,15 +191,15 @@ t_else (261)
 t_inf (262)
 t_break (263)
 t_continue (264)
-t_return (265) 52 53
-t_gettype (266) 8 9
+t_return (265) 54 55
+t_gettype (266) 9 10
 t_meme (267) 4
-t_reserve (268) 18
-t_noreserve (269) 19
-t_fast (270) 20
-t_stack (271) 21
-t_locate (272) 22
-t_immortal (273) 23
+t_reserve (268) 19
+t_noreserve (269) 20
+t_fast (270) 21
+t_stack (271) 22
+t_locate (272) 23
+t_immortal (273) 24
 t_sbit (274)
 t_sdb (275)
 t_sdw (276)
@@ -206,1803 +210,1829 @@ t_db (280)
 t_dw (281)
 t_dd (282)
 t_dq (283)
-t_void (284) 34 46
-t_auto (285) 15
+t_void (284) 35 47
+t_auto (285) 16
 t_bytes (286)
 t_sbytes (287)
 t_bits (288)
-t_asm (289)
-t_plus (290) 58
-t_minus (291) 59
-t_mult (292) 60
+t_asm (289) 51
+t_plus (290) 60
+t_minus (291) 61
+t_mult (292) 62
 t_addr (293)
-t_div (294) 61
-t_mod (295) 62
-t_bigger (296) 26
-t_smaller (297) 27
-t_neg (298) 25
-t_semi (299) 3 4 28 30 31 32 43 50 51 52 53 54 55 56
-t_comma (300) 36 45
+t_div (294) 63
+t_mod (295) 64
+t_bigger (296) 27
+t_smaller (297) 28
+t_neg (298) 26
+t_semi (299) 3 4 6 29 31 32 33 44 52 53 54 55 56 57 58
+t_comma (300) 37 46
 t_dot (301)
-t_assign (302) 4 13 64
-t_rb_o (303) 6 8 9 10 11 24 25 57 63
-t_rb_c (304) 6 8 9 10 11 24 25 57 63
-t_fb_o (305) 38 39
-t_fb_c (306) 38 39
+t_assign (302) 4 14 66
+t_rb_o (303) 7 9 10 11 12 25 26 59 65
+t_rb_c (304) 7 9 10 11 12 25 26 59 65
+t_fb_o (305) 39 40 51
+t_fb_c (306) 39 40
 t_slash (307)
 t_nslash (308)
-t_sb_o (309) 26 27
-t_sb_c (310) 26 27
+t_sb_o (309) 27 28
+t_sb_c (310) 27 28
 t_and (311)
 t_or (312)
 t_eq (313)
 t_neq (314)
 t_beq (315)
 t_seq (316)
-t_lshift (317)
+t_lshift (317) 50
 t_rshift (318)
-t_spec (319) 49
+t_spec (319)
 t_any (320)
 t_nsget (321)
 t_namespace (322)
 t_char (323)
 t_string (324)
-t_id (325) 10 11 12 13 24 25 47 66
-t_tname (326) 7 48
-t_num (327) 4 65
-t_comm (328) 5
-t_line (329)
-erbexpr (330)
-eassign (331)
-eor (332)
-eand (333)
-eneq (334)
-eeq (335)
-ebeq (336)
-eseq (337)
-ebigger (338)
-esmaller (339)
-ershift (340)
-elshift (341)
-eminus (342)
-eplus (343)
-emod (344)
-ediv (345)
-emult (346)
-egoaddr (347)
-egetaddr (348)
-euminus (349)
-euplus (350)
-enot (351)
-etypeof (352)
-ecall (353)
-esqexpr (354)
-eptrmember (355)
-emember (356)
+t_id (325) 11 12 13 14 25 26 48 68
+t_notdefined (326)
+t_tname (327) 8 49
+t_num (328) 4 67
+t_comm (329) 5
+t_line (330)
+erbexpr (331)
+eplus (332)
+eminus (333)
+emult (334)
+ediv (335)
+emod (336)
+ecall (337)
+eassign (338)
+t_rbexpr (339)
+egoaddr (340)
+egetaddr (341)
+euminus (342)
+euplus (343)
+t_not (344)
+etypeof (345)
+esqexpr (346)
+t_ptrmember (347)
+t_member (348)
 
 
 Нетерминальные символы с правилами, в которых они появляются
 
-$accept (102)
+$accept (94)
     налево: 0
-commands (103)
-    налево: 1 2 3 4 5, направо: 0 2 3 4 5
-type_expr (104)
-    налево: 6 7 8 9, направо: 6 10 11 12 13
-fun_decl (105)
-    налево: 10, направо: 28
-fun_defn (106)
+commands (95)
+    налево: 1 2 3 4 5 6, направо: 0 2 3 4 5
+type_expr (96)
+    налево: 7 8 9 10, направо: 7 11 12 13 14
+fun_decl (97)
     налево: 11, направо: 29
-var_decl (107)
-    налево: 12, направо: 30 37 50
-var_defn (108)
-    налево: 13, направо: 31 51
-flags (109)
-    налево: 14 15 16 17, направо: 10 11 12 13 16
-flag (110)
-    налево: 18 19 20 21 22 23, направо: 16 17
-pos (111)
-    налево: 24 25 26 27, направо: 22
-command (112)
-    налево: 28 29 30 31 32, направо: 2
-fun_params (113)
-    налево: 33 34 35 36, направо: 10 11 36
-fun_param (114)
-    налево: 37, направо: 35 36
-body (115)
-    налево: 38 39 40, направо: 11
-bodycoms (116)
-    налево: 41 42 43, направо: 38 42 43
-fun_args (117)
-    налево: 44 45 46, направо: 45 49 63
-aid (118)
-    налево: 47 48, направо: 49
-asm (119)
-    налево: 49, направо: 32 55
-bodycom (120)
-    налево: 50 51 52 53 54 55 56, направо: 41 42
-expr (121)
-    налево: 57 58 59 60 61 62 63 64 65 66 67, направо: 8 13 44 45 52
-    54 57 58 59 60 61 62 63 64
+fun_defn (98)
+    налево: 12, направо: 30
+var_decl (99)
+    налево: 13, направо: 31 38 52
+var_defn (100)
+    налево: 14, направо: 32 53
+flags (101)
+    налево: 15 16 17 18, направо: 11 12 13 14 17
+flag (102)
+    налево: 19 20 21 22 23 24, направо: 17 18
+pos (103)
+    налево: 25 26 27 28, направо: 23
+command (104)
+    налево: 29 30 31 32 33, направо: 2
+fun_params (105)
+    налево: 34 35 36 37, направо: 11 12 37
+fun_param (106)
+    налево: 38, направо: 36 37
+body (107)
+    налево: 39 40 41, направо: 12
+bodycoms (108)
+    налево: 42 43 44, направо: 39 43 44
+fun_args (109)
+    налево: 45 46 47, направо: 46 50 65
+aid (110)
+    налево: 48 49, направо: 50
+asm (111)
+    налево: 50 51, направо: 33 57
+bodycom (112)
+    налево: 52 53 54 55 56 57 58, направо: 42 43
+expr (113)
+    налево: 59 60 61 62 63 64 65 66 67 68 69, направо: 9 14 45 46 54
+    56 59 60 61 62 63 64 65 66
 
 
 состояние 0
 
     0 $accept: . commands $end
-    1 commands: .
+    1 commands: .  [$end, t_gettype, t_meme, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_auto, t_asm, t_semi, t_rb_o, t_lshift, t_tname, t_comm]
     2         | . commands command
     3         | . commands t_semi
     4         | . commands t_meme t_assign t_num t_semi
     5         | . commands t_comm
+    6         | . error t_semi
 
-    $default  вывод с использованием правила 1 (commands)
+    error  сдвиг, и переход в состояние 1
 
-    commands  переход в состояние 1
+    $end         вывод с использованием правила 1 (commands)
+    t_gettype    вывод с использованием правила 1 (commands)
+    t_meme       вывод с использованием правила 1 (commands)
+    t_reserve    вывод с использованием правила 1 (commands)
+    t_noreserve  вывод с использованием правила 1 (commands)
+    t_fast       вывод с использованием правила 1 (commands)
+    t_stack      вывод с использованием правила 1 (commands)
+    t_locate     вывод с использованием правила 1 (commands)
+    t_immortal   вывод с использованием правила 1 (commands)
+    t_auto       вывод с использованием правила 1 (commands)
+    t_asm        вывод с использованием правила 1 (commands)
+    t_semi       вывод с использованием правила 1 (commands)
+    t_rb_o       вывод с использованием правила 1 (commands)
+    t_lshift     вывод с использованием правила 1 (commands)
+    t_tname      вывод с использованием правила 1 (commands)
+    t_comm       вывод с использованием правила 1 (commands)
+
+    commands  переход в состояние 2
 
 
 состояние 1
+
+    6 commands: error . t_semi
+
+    t_semi  сдвиг, и переход в состояние 3
+
+
+состояние 2
 
     0 $accept: commands . $end
     2 commands: commands . command
     3         | commands . t_semi
     4         | commands . t_meme t_assign t_num t_semi
     5         | commands . t_comm
-   10 fun_decl: . flags type_expr t_id t_rb_o fun_params t_rb_c
-   11 fun_defn: . flags type_expr t_id t_rb_o fun_params t_rb_c body
-   12 var_decl: . flags type_expr t_id
-   13 var_defn: . flags type_expr t_id t_assign expr
-   14 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
-   15      | . t_auto
-   16      | . flags flag
-   17      | . flag
-   18 flag: . t_reserve
-   19     | . t_noreserve
-   20     | . t_fast
-   21     | . t_stack
-   22     | . t_locate pos
-   23     | . t_immortal
-   28 command: . fun_decl t_semi
-   29        | . fun_defn
-   30        | . var_decl t_semi
-   31        | . var_defn t_semi
-   32        | . asm t_semi
-   49 asm: . t_spec aid fun_args
+   11 fun_decl: . flags type_expr t_id t_rb_o fun_params t_rb_c
+   12 fun_defn: . flags type_expr t_id t_rb_o fun_params t_rb_c body
+   13 var_decl: . flags type_expr t_id
+   14 var_defn: . flags type_expr t_id t_assign expr
+   15 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
+   16      | . t_auto
+   17      | . flags flag
+   18      | . flag
+   19 flag: . t_reserve
+   20     | . t_noreserve
+   21     | . t_fast
+   22     | . t_stack
+   23     | . t_locate pos
+   24     | . t_immortal
+   29 command: . fun_decl t_semi
+   30        | . fun_defn
+   31        | . var_decl t_semi
+   32        | . var_defn t_semi
+   33        | . asm t_semi
+   50 asm: . t_lshift aid fun_args
+   51    | . t_asm t_fb_o
 
-    $end         сдвиг, и переход в состояние 2
-    t_meme       сдвиг, и переход в состояние 3
-    t_reserve    сдвиг, и переход в состояние 4
-    t_noreserve  сдвиг, и переход в состояние 5
-    t_fast       сдвиг, и переход в состояние 6
-    t_stack      сдвиг, и переход в состояние 7
-    t_locate     сдвиг, и переход в состояние 8
-    t_immortal   сдвиг, и переход в состояние 9
-    t_auto       сдвиг, и переход в состояние 10
-    t_semi       сдвиг, и переход в состояние 11
-    t_spec       сдвиг, и переход в состояние 12
-    t_comm       сдвиг, и переход в состояние 13
+    $end         сдвиг, и переход в состояние 4
+    t_meme       сдвиг, и переход в состояние 5
+    t_reserve    сдвиг, и переход в состояние 6
+    t_noreserve  сдвиг, и переход в состояние 7
+    t_fast       сдвиг, и переход в состояние 8
+    t_stack      сдвиг, и переход в состояние 9
+    t_locate     сдвиг, и переход в состояние 10
+    t_immortal   сдвиг, и переход в состояние 11
+    t_auto       сдвиг, и переход в состояние 12
+    t_asm        сдвиг, и переход в состояние 13
+    t_semi       сдвиг, и переход в состояние 14
+    t_lshift     сдвиг, и переход в состояние 15
+    t_comm       сдвиг, и переход в состояние 16
 
-    t_reserve    [вывод с использованием правила 14 (flags)]
-    t_noreserve  [вывод с использованием правила 14 (flags)]
-    t_fast       [вывод с использованием правила 14 (flags)]
-    t_stack      [вывод с использованием правила 14 (flags)]
-    t_locate     [вывод с использованием правила 14 (flags)]
-    t_immortal   [вывод с использованием правила 14 (flags)]
-    $default     вывод с использованием правила 14 (flags)
+    t_reserve    [вывод с использованием правила 15 (flags)]
+    t_noreserve  [вывод с использованием правила 15 (flags)]
+    t_fast       [вывод с использованием правила 15 (flags)]
+    t_stack      [вывод с использованием правила 15 (flags)]
+    t_locate     [вывод с использованием правила 15 (flags)]
+    t_immortal   [вывод с использованием правила 15 (flags)]
+    $default     вывод с использованием правила 15 (flags)
 
-    fun_decl  переход в состояние 14
-    fun_defn  переход в состояние 15
-    var_decl  переход в состояние 16
-    var_defn  переход в состояние 17
-    flags     переход в состояние 18
-    flag      переход в состояние 19
-    command   переход в состояние 20
-    asm       переход в состояние 21
+    fun_decl  переход в состояние 17
+    fun_defn  переход в состояние 18
+    var_decl  переход в состояние 19
+    var_defn  переход в состояние 20
+    flags     переход в состояние 21
+    flag      переход в состояние 22
+    command   переход в состояние 23
+    asm       переход в состояние 24
 
 
-состояние 2
+состояние 3
+
+    6 commands: error t_semi .
+
+    $default  вывод с использованием правила 6 (commands)
+
+
+состояние 4
 
     0 $accept: commands $end .
 
     $default  accept
 
 
-состояние 3
+состояние 5
 
     4 commands: commands t_meme . t_assign t_num t_semi
 
-    t_assign  сдвиг, и переход в состояние 22
-
-
-состояние 4
-
-   18 flag: t_reserve .
-
-    $default  вывод с использованием правила 18 (flag)
-
-
-состояние 5
-
-   19 flag: t_noreserve .
-
-    $default  вывод с использованием правила 19 (flag)
+    t_assign  сдвиг, и переход в состояние 25
 
 
 состояние 6
 
-   20 flag: t_fast .
+   19 flag: t_reserve .
 
-    $default  вывод с использованием правила 20 (flag)
+    $default  вывод с использованием правила 19 (flag)
 
 
 состояние 7
 
-   21 flag: t_stack .
+   20 flag: t_noreserve .
 
-    $default  вывод с использованием правила 21 (flag)
+    $default  вывод с использованием правила 20 (flag)
 
 
 состояние 8
 
-   22 flag: t_locate . pos
-   24 pos: . t_rb_o t_id t_rb_c
-   25    | . t_rb_o t_id t_rb_c t_neg
-   26    | . t_sb_o t_bigger t_sb_c
-   27    | . t_sb_o t_smaller t_sb_c
+   21 flag: t_fast .
 
-    t_rb_o  сдвиг, и переход в состояние 23
-    t_sb_o  сдвиг, и переход в состояние 24
-
-    pos  переход в состояние 25
+    $default  вывод с использованием правила 21 (flag)
 
 
 состояние 9
 
-   23 flag: t_immortal .
+   22 flag: t_stack .
 
-    $default  вывод с использованием правила 23 (flag)
+    $default  вывод с использованием правила 22 (flag)
 
 
 состояние 10
 
-   15 flags: t_auto .
+   23 flag: t_locate . pos
+   25 pos: . t_rb_o t_id t_rb_c
+   26    | . t_rb_o t_id t_rb_c t_neg
+   27    | . t_sb_o t_bigger t_sb_c
+   28    | . t_sb_o t_smaller t_sb_c
 
-    $default  вывод с использованием правила 15 (flags)
+    t_rb_o  сдвиг, и переход в состояние 26
+    t_sb_o  сдвиг, и переход в состояние 27
+
+    pos  переход в состояние 28
 
 
 состояние 11
+
+   24 flag: t_immortal .
+
+    $default  вывод с использованием правила 24 (flag)
+
+
+состояние 12
+
+   16 flags: t_auto .
+
+    $default  вывод с использованием правила 16 (flags)
+
+
+состояние 13
+
+   51 asm: t_asm . t_fb_o
+
+    t_fb_o  сдвиг, и переход в состояние 29
+
+
+состояние 14
 
     3 commands: commands t_semi .
 
     $default  вывод с использованием правила 3 (commands)
 
 
-состояние 12
+состояние 15
 
-   47 aid: . t_id
-   48    | . t_tname
-   49 asm: t_spec . aid fun_args
+   48 aid: . t_id
+   49    | . t_tname
+   50 asm: t_lshift . aid fun_args
 
-    t_id     сдвиг, и переход в состояние 26
-    t_tname  сдвиг, и переход в состояние 27
+    t_id     сдвиг, и переход в состояние 30
+    t_tname  сдвиг, и переход в состояние 31
 
-    aid  переход в состояние 28
+    aid  переход в состояние 32
 
 
-состояние 13
+состояние 16
 
     5 commands: commands t_comm .
 
     $default  вывод с использованием правила 5 (commands)
 
 
-состояние 14
-
-   28 command: fun_decl . t_semi
-
-    t_semi  сдвиг, и переход в состояние 29
-
-
-состояние 15
-
-   29 command: fun_defn .
-
-    $default  вывод с использованием правила 29 (command)
-
-
-состояние 16
-
-   30 command: var_decl . t_semi
-
-    t_semi  сдвиг, и переход в состояние 30
-
-
 состояние 17
 
-   31 command: var_defn . t_semi
+   29 command: fun_decl . t_semi
 
-    t_semi  сдвиг, и переход в состояние 31
+    t_semi  сдвиг, и переход в состояние 33
 
 
 состояние 18
 
-    6 type_expr: . t_rb_o type_expr t_rb_c
-    7          | . t_tname
-    8          | . t_gettype t_rb_o expr t_rb_c
-    9          | . t_gettype t_rb_o t_rb_c
-   10 fun_decl: flags . type_expr t_id t_rb_o fun_params t_rb_c
-   11 fun_defn: flags . type_expr t_id t_rb_o fun_params t_rb_c body
-   12 var_decl: flags . type_expr t_id
-   13 var_defn: flags . type_expr t_id t_assign expr
-   16 flags: flags . flag
-   18 flag: . t_reserve
-   19     | . t_noreserve
-   20     | . t_fast
-   21     | . t_stack
-   22     | . t_locate pos
-   23     | . t_immortal
+   30 command: fun_defn .
 
-    t_gettype    сдвиг, и переход в состояние 32
-    t_reserve    сдвиг, и переход в состояние 4
-    t_noreserve  сдвиг, и переход в состояние 5
-    t_fast       сдвиг, и переход в состояние 6
-    t_stack      сдвиг, и переход в состояние 7
-    t_locate     сдвиг, и переход в состояние 8
-    t_immortal   сдвиг, и переход в состояние 9
-    t_rb_o       сдвиг, и переход в состояние 33
-    t_tname      сдвиг, и переход в состояние 34
-
-    type_expr  переход в состояние 35
-    flag       переход в состояние 36
+    $default  вывод с использованием правила 30 (command)
 
 
 состояние 19
 
-   17 flags: flag .
+   31 command: var_decl . t_semi
 
-    $default  вывод с использованием правила 17 (flags)
+    t_semi  сдвиг, и переход в состояние 34
 
 
 состояние 20
+
+   32 command: var_defn . t_semi
+
+    t_semi  сдвиг, и переход в состояние 35
+
+
+состояние 21
+
+    7 type_expr: . t_rb_o type_expr t_rb_c
+    8          | . t_tname
+    9          | . t_gettype t_rb_o expr t_rb_c
+   10          | . t_gettype t_rb_o t_rb_c
+   11 fun_decl: flags . type_expr t_id t_rb_o fun_params t_rb_c
+   12 fun_defn: flags . type_expr t_id t_rb_o fun_params t_rb_c body
+   13 var_decl: flags . type_expr t_id
+   14 var_defn: flags . type_expr t_id t_assign expr
+   17 flags: flags . flag
+   19 flag: . t_reserve
+   20     | . t_noreserve
+   21     | . t_fast
+   22     | . t_stack
+   23     | . t_locate pos
+   24     | . t_immortal
+
+    t_gettype    сдвиг, и переход в состояние 36
+    t_reserve    сдвиг, и переход в состояние 6
+    t_noreserve  сдвиг, и переход в состояние 7
+    t_fast       сдвиг, и переход в состояние 8
+    t_stack      сдвиг, и переход в состояние 9
+    t_locate     сдвиг, и переход в состояние 10
+    t_immortal   сдвиг, и переход в состояние 11
+    t_rb_o       сдвиг, и переход в состояние 37
+    t_tname      сдвиг, и переход в состояние 38
+
+    type_expr  переход в состояние 39
+    flag       переход в состояние 40
+
+
+состояние 22
+
+   18 flags: flag .
+
+    $default  вывод с использованием правила 18 (flags)
+
+
+состояние 23
 
     2 commands: commands command .
 
     $default  вывод с использованием правила 2 (commands)
 
 
-состояние 21
-
-   32 command: asm . t_semi
-
-    t_semi  сдвиг, и переход в состояние 37
-
-
-состояние 22
-
-    4 commands: commands t_meme t_assign . t_num t_semi
-
-    t_num  сдвиг, и переход в состояние 38
-
-
-состояние 23
-
-   24 pos: t_rb_o . t_id t_rb_c
-   25    | t_rb_o . t_id t_rb_c t_neg
-
-    t_id  сдвиг, и переход в состояние 39
-
-
 состояние 24
 
-   26 pos: t_sb_o . t_bigger t_sb_c
-   27    | t_sb_o . t_smaller t_sb_c
+   33 command: asm . t_semi
 
-    t_bigger   сдвиг, и переход в состояние 40
-    t_smaller  сдвиг, и переход в состояние 41
+    t_semi  сдвиг, и переход в состояние 41
 
 
 состояние 25
 
-   22 flag: t_locate pos .
+    4 commands: commands t_meme t_assign . t_num t_semi
 
-    $default  вывод с использованием правила 22 (flag)
+    t_num  сдвиг, и переход в состояние 42
 
 
 состояние 26
 
-   47 aid: t_id .
+   25 pos: t_rb_o . t_id t_rb_c
+   26    | t_rb_o . t_id t_rb_c t_neg
 
-    $default  вывод с использованием правила 47 (aid)
+    t_id  сдвиг, и переход в состояние 43
 
 
 состояние 27
 
-   48 aid: t_tname .
+   27 pos: t_sb_o . t_bigger t_sb_c
+   28    | t_sb_o . t_smaller t_sb_c
 
-    $default  вывод с использованием правила 48 (aid)
+    t_bigger   сдвиг, и переход в состояние 44
+    t_smaller  сдвиг, и переход в состояние 45
 
 
 состояние 28
 
-   44 fun_args: . expr
-   45         | . fun_args t_comma expr
-   46         | . t_void
-   49 asm: t_spec aid . fun_args
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   23 flag: t_locate pos .
 
-    error   сдвиг, и переход в состояние 42
-    t_void  сдвиг, и переход в состояние 43
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
-
-    fun_args  переход в состояние 47
-    expr      переход в состояние 48
+    $default  вывод с использованием правила 23 (flag)
 
 
 состояние 29
 
-   28 command: fun_decl t_semi .
+   51 asm: t_asm t_fb_o .
 
-    $default  вывод с использованием правила 28 (command)
+    $default  вывод с использованием правила 51 (asm)
 
 
 состояние 30
 
-   30 command: var_decl t_semi .
+   48 aid: t_id .
 
-    $default  вывод с использованием правила 30 (command)
+    $default  вывод с использованием правила 48 (aid)
 
 
 состояние 31
 
-   31 command: var_defn t_semi .
+   49 aid: t_tname .
 
-    $default  вывод с использованием правила 31 (command)
+    $default  вывод с использованием правила 49 (aid)
 
 
 состояние 32
 
-    8 type_expr: t_gettype . t_rb_o expr t_rb_c
-    9          | t_gettype . t_rb_o t_rb_c
+   45 fun_args: . expr
+   46         | . fun_args t_comma expr
+   47         | . t_void
+   50 asm: t_lshift aid . fun_args
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    t_rb_o  сдвиг, и переход в состояние 49
+    error   сдвиг, и переход в состояние 46
+    t_void  сдвиг, и переход в состояние 47
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
+
+    fun_args  переход в состояние 51
+    expr      переход в состояние 52
 
 
 состояние 33
 
-    6 type_expr: . t_rb_o type_expr t_rb_c
-    6          | t_rb_o . type_expr t_rb_c
-    7          | . t_tname
-    8          | . t_gettype t_rb_o expr t_rb_c
-    9          | . t_gettype t_rb_o t_rb_c
+   29 command: fun_decl t_semi .
 
-    t_gettype  сдвиг, и переход в состояние 32
-    t_rb_o     сдвиг, и переход в состояние 33
-    t_tname    сдвиг, и переход в состояние 34
-
-    type_expr  переход в состояние 50
+    $default  вывод с использованием правила 29 (command)
 
 
 состояние 34
 
-    7 type_expr: t_tname .
+   31 command: var_decl t_semi .
 
-    $default  вывод с использованием правила 7 (type_expr)
+    $default  вывод с использованием правила 31 (command)
 
 
 состояние 35
 
-   10 fun_decl: flags type_expr . t_id t_rb_o fun_params t_rb_c
-   11 fun_defn: flags type_expr . t_id t_rb_o fun_params t_rb_c body
-   12 var_decl: flags type_expr . t_id
-   13 var_defn: flags type_expr . t_id t_assign expr
-
-    t_id  сдвиг, и переход в состояние 51
-
-
-состояние 36
-
-   16 flags: flags flag .
-
-    $default  вывод с использованием правила 16 (flags)
-
-
-состояние 37
-
-   32 command: asm t_semi .
+   32 command: var_defn t_semi .
 
     $default  вывод с использованием правила 32 (command)
 
 
+состояние 36
+
+    9 type_expr: t_gettype . t_rb_o expr t_rb_c
+   10          | t_gettype . t_rb_o t_rb_c
+
+    t_rb_o  сдвиг, и переход в состояние 53
+
+
+состояние 37
+
+    7 type_expr: . t_rb_o type_expr t_rb_c
+    7          | t_rb_o . type_expr t_rb_c
+    8          | . t_tname
+    9          | . t_gettype t_rb_o expr t_rb_c
+   10          | . t_gettype t_rb_o t_rb_c
+
+    t_gettype  сдвиг, и переход в состояние 36
+    t_rb_o     сдвиг, и переход в состояние 37
+    t_tname    сдвиг, и переход в состояние 38
+
+    type_expr  переход в состояние 54
+
+
 состояние 38
 
-    4 commands: commands t_meme t_assign t_num . t_semi
+    8 type_expr: t_tname .
 
-    t_semi  сдвиг, и переход в состояние 52
+    $default  вывод с использованием правила 8 (type_expr)
 
 
 состояние 39
 
-   24 pos: t_rb_o t_id . t_rb_c
-   25    | t_rb_o t_id . t_rb_c t_neg
+   11 fun_decl: flags type_expr . t_id t_rb_o fun_params t_rb_c
+   12 fun_defn: flags type_expr . t_id t_rb_o fun_params t_rb_c body
+   13 var_decl: flags type_expr . t_id
+   14 var_defn: flags type_expr . t_id t_assign expr
 
-    t_rb_c  сдвиг, и переход в состояние 53
+    t_id  сдвиг, и переход в состояние 55
 
 
 состояние 40
 
-   26 pos: t_sb_o t_bigger . t_sb_c
+   17 flags: flags flag .
 
-    t_sb_c  сдвиг, и переход в состояние 54
+    $default  вывод с использованием правила 17 (flags)
 
 
 состояние 41
 
-   27 pos: t_sb_o t_smaller . t_sb_c
+   33 command: asm t_semi .
 
-    t_sb_c  сдвиг, и переход в состояние 55
+    $default  вывод с использованием правила 33 (command)
 
 
 состояние 42
 
-   67 expr: error .
+    4 commands: commands t_meme t_assign t_num . t_semi
 
-    $default  вывод с использованием правила 67 (expr)
+    t_semi  сдвиг, и переход в состояние 56
 
 
 состояние 43
 
-   46 fun_args: t_void .
+   25 pos: t_rb_o t_id . t_rb_c
+   26    | t_rb_o t_id . t_rb_c t_neg
 
-    $default  вывод с использованием правила 46 (fun_args)
+    t_rb_c  сдвиг, и переход в состояние 57
 
 
 состояние 44
 
-   57 expr: . t_rb_o expr t_rb_c
-   57     | t_rb_o . expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   27 pos: t_sb_o t_bigger . t_sb_c
 
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
-
-    expr  переход в состояние 56
+    t_sb_c  сдвиг, и переход в состояние 58
 
 
 состояние 45
 
-   66 expr: t_id .
+   28 pos: t_sb_o t_smaller . t_sb_c
 
-    $default  вывод с использованием правила 66 (expr)
+    t_sb_c  сдвиг, и переход в состояние 59
 
 
 состояние 46
 
-   65 expr: t_num .
+   69 expr: error .
 
-    $default  вывод с использованием правила 65 (expr)
+    $default  вывод с использованием правила 69 (expr)
 
 
 состояние 47
 
-   45 fun_args: fun_args . t_comma expr
-   49 asm: t_spec aid fun_args .  [t_semi]
+   47 fun_args: t_void .
 
-    t_comma  сдвиг, и переход в состояние 57
-
-    $default  вывод с использованием правила 49 (asm)
+    $default  вывод с использованием правила 47 (fun_args)
 
 
 состояние 48
 
-   44 fun_args: expr .  [t_semi, t_comma, t_rb_c]
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+   59 expr: . t_rb_o expr t_rb_c
+   59     | t_rb_o . expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
 
-    $default  вывод с использованием правила 44 (fun_args)
+    expr  переход в состояние 60
 
 
 состояние 49
 
-    8 type_expr: t_gettype t_rb_o . expr t_rb_c
-    9          | t_gettype t_rb_o . t_rb_c
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   68 expr: t_id .
 
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_rb_c  сдвиг, и переход в состояние 65
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
-
-    expr  переход в состояние 66
+    $default  вывод с использованием правила 68 (expr)
 
 
 состояние 50
 
-    6 type_expr: t_rb_o type_expr . t_rb_c
+   67 expr: t_num .
 
-    t_rb_c  сдвиг, и переход в состояние 67
+    $default  вывод с использованием правила 67 (expr)
 
 
 состояние 51
 
-   10 fun_decl: flags type_expr t_id . t_rb_o fun_params t_rb_c
-   11 fun_defn: flags type_expr t_id . t_rb_o fun_params t_rb_c body
-   12 var_decl: flags type_expr t_id .  [t_semi]
-   13 var_defn: flags type_expr t_id . t_assign expr
+   46 fun_args: fun_args . t_comma expr
+   50 asm: t_lshift aid fun_args .  [t_semi]
 
-    t_assign  сдвиг, и переход в состояние 68
-    t_rb_o    сдвиг, и переход в состояние 69
+    t_comma  сдвиг, и переход в состояние 61
 
-    $default  вывод с использованием правила 12 (var_decl)
+    $default  вывод с использованием правила 50 (asm)
 
 
 состояние 52
+
+   45 fun_args: expr .  [t_semi, t_comma, t_rb_c]
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
+
+    t_plus    сдвиг, и переход в состояние 62
+    t_minus   сдвиг, и переход в состояние 63
+    t_mult    сдвиг, и переход в состояние 64
+    t_div     сдвиг, и переход в состояние 65
+    t_mod     сдвиг, и переход в состояние 66
+    t_assign  сдвиг, и переход в состояние 67
+    t_rb_o    сдвиг, и переход в состояние 68
+
+    $default  вывод с использованием правила 45 (fun_args)
+
+
+состояние 53
+
+    9 type_expr: t_gettype t_rb_o . expr t_rb_c
+   10          | t_gettype t_rb_o . t_rb_c
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
+
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_rb_c  сдвиг, и переход в состояние 69
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
+
+    expr  переход в состояние 70
+
+
+состояние 54
+
+    7 type_expr: t_rb_o type_expr . t_rb_c
+
+    t_rb_c  сдвиг, и переход в состояние 71
+
+
+состояние 55
+
+   11 fun_decl: flags type_expr t_id . t_rb_o fun_params t_rb_c
+   12 fun_defn: flags type_expr t_id . t_rb_o fun_params t_rb_c body
+   13 var_decl: flags type_expr t_id .  [t_semi]
+   14 var_defn: flags type_expr t_id . t_assign expr
+
+    t_assign  сдвиг, и переход в состояние 72
+    t_rb_o    сдвиг, и переход в состояние 73
+
+    $default  вывод с использованием правила 13 (var_decl)
+
+
+состояние 56
 
     4 commands: commands t_meme t_assign t_num t_semi .
 
     $default  вывод с использованием правила 4 (commands)
 
 
-состояние 53
-
-   24 pos: t_rb_o t_id t_rb_c .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
-   25    | t_rb_o t_id t_rb_c . t_neg
-
-    t_neg  сдвиг, и переход в состояние 70
-
-    $default  вывод с использованием правила 24 (pos)
-
-
-состояние 54
-
-   26 pos: t_sb_o t_bigger t_sb_c .
-
-    $default  вывод с использованием правила 26 (pos)
-
-
-состояние 55
-
-   27 pos: t_sb_o t_smaller t_sb_c .
-
-    $default  вывод с использованием правила 27 (pos)
-
-
-состояние 56
-
-   57 expr: t_rb_o expr . t_rb_c
-   58     | expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
-
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
-    t_rb_c    сдвиг, и переход в состояние 71
-
-
 состояние 57
 
-   45 fun_args: fun_args t_comma . expr
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   25 pos: t_rb_o t_id t_rb_c .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
+   26    | t_rb_o t_id t_rb_c . t_neg
 
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
+    t_neg  сдвиг, и переход в состояние 74
 
-    expr  переход в состояние 72
+    $default  вывод с использованием правила 25 (pos)
 
 
 состояние 58
 
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   58     | expr t_plus . expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   27 pos: t_sb_o t_bigger t_sb_c .
 
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
-
-    expr  переход в состояние 73
+    $default  вывод с использованием правила 27 (pos)
 
 
 состояние 59
 
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   59     | expr t_minus . expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   28 pos: t_sb_o t_smaller t_sb_c .
 
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
-
-    expr  переход в состояние 74
+    $default  вывод с использованием правила 28 (pos)
 
 
 состояние 60
 
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   60     | expr t_mult . expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   59 expr: t_rb_o expr . t_rb_c
+   60     | expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
-
-    expr  переход в состояние 75
+    t_plus    сдвиг, и переход в состояние 62
+    t_minus   сдвиг, и переход в состояние 63
+    t_mult    сдвиг, и переход в состояние 64
+    t_div     сдвиг, и переход в состояние 65
+    t_mod     сдвиг, и переход в состояние 66
+    t_assign  сдвиг, и переход в состояние 67
+    t_rb_o    сдвиг, и переход в состояние 68
+    t_rb_c    сдвиг, и переход в состояние 75
 
 
 состояние 61
 
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   61     | expr t_div . expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   46 fun_args: fun_args t_comma . expr
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
 
     expr  переход в состояние 76
 
 
 состояние 62
 
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   62     | expr t_mod . expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   60     | expr t_plus . expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
 
     expr  переход в состояние 77
 
 
 состояние 63
 
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   64     | expr t_assign . expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   61     | expr t_minus . expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
 
     expr  переход в состояние 78
 
 
 состояние 64
 
-   44 fun_args: . expr
-   45         | . fun_args t_comma expr
-   46         | . t_void
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   63     | expr t_rb_o . fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   62     | expr t_mult . expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    error   сдвиг, и переход в состояние 42
-    t_void  сдвиг, и переход в состояние 43
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
 
-    fun_args  переход в состояние 79
-    expr      переход в состояние 48
+    expr  переход в состояние 79
 
 
 состояние 65
 
-    9 type_expr: t_gettype t_rb_o t_rb_c .
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   63     | expr t_div . expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    $default  вывод с использованием правила 9 (type_expr)
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
+
+    expr  переход в состояние 80
 
 
 состояние 66
 
-    8 type_expr: t_gettype t_rb_o expr . t_rb_c
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   64     | expr t_mod . expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
-    t_rb_c    сдвиг, и переход в состояние 80
-
-
-состояние 67
-
-    6 type_expr: t_rb_o type_expr t_rb_c .
-
-    $default  вывод с использованием правила 6 (type_expr)
-
-
-состояние 68
-
-   13 var_defn: flags type_expr t_id t_assign . expr
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
-
-    error   сдвиг, и переход в состояние 42
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
 
     expr  переход в состояние 81
 
 
+состояние 67
+
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   66     | expr t_assign . expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
+
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
+
+    expr  переход в состояние 82
+
+
+состояние 68
+
+   45 fun_args: . expr
+   46         | . fun_args t_comma expr
+   47         | . t_void
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   65     | expr t_rb_o . fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
+
+    error   сдвиг, и переход в состояние 46
+    t_void  сдвиг, и переход в состояние 47
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
+
+    fun_args  переход в состояние 83
+    expr      переход в состояние 52
+
+
 состояние 69
 
-   10 fun_decl: flags type_expr t_id t_rb_o . fun_params t_rb_c
-   11 fun_defn: flags type_expr t_id t_rb_o . fun_params t_rb_c body
-   12 var_decl: . flags type_expr t_id
-   14 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
-   15      | . t_auto
-   16      | . flags flag
-   17      | . flag
-   18 flag: . t_reserve
-   19     | . t_noreserve
-   20     | . t_fast
-   21     | . t_stack
-   22     | . t_locate pos
-   23     | . t_immortal
-   33 fun_params: .  [t_comma, t_rb_c]
-   34           | . t_void
-   35           | . fun_param
-   36           | . fun_params t_comma fun_param
-   37 fun_param: . var_decl
+   10 type_expr: t_gettype t_rb_o t_rb_c .
 
-    t_reserve    сдвиг, и переход в состояние 4
-    t_noreserve  сдвиг, и переход в состояние 5
-    t_fast       сдвиг, и переход в состояние 6
-    t_stack      сдвиг, и переход в состояние 7
-    t_locate     сдвиг, и переход в состояние 8
-    t_immortal   сдвиг, и переход в состояние 9
-    t_void       сдвиг, и переход в состояние 82
-    t_auto       сдвиг, и переход в состояние 10
-
-    t_reserve    [вывод с использованием правила 14 (flags)]
-    t_noreserve  [вывод с использованием правила 14 (flags)]
-    t_fast       [вывод с использованием правила 14 (flags)]
-    t_stack      [вывод с использованием правила 14 (flags)]
-    t_locate     [вывод с использованием правила 14 (flags)]
-    t_immortal   [вывод с использованием правила 14 (flags)]
-    t_comma      вывод с использованием правила 33 (fun_params)
-    t_rb_c       вывод с использованием правила 33 (fun_params)
-    $default     вывод с использованием правила 14 (flags)
-
-    var_decl    переход в состояние 83
-    flags       переход в состояние 84
-    flag        переход в состояние 19
-    fun_params  переход в состояние 85
-    fun_param   переход в состояние 86
+    $default  вывод с использованием правила 10 (type_expr)
 
 
 состояние 70
 
-   25 pos: t_rb_o t_id t_rb_c t_neg .
+    9 type_expr: t_gettype t_rb_o expr . t_rb_c
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    $default  вывод с использованием правила 25 (pos)
+    t_plus    сдвиг, и переход в состояние 62
+    t_minus   сдвиг, и переход в состояние 63
+    t_mult    сдвиг, и переход в состояние 64
+    t_div     сдвиг, и переход в состояние 65
+    t_mod     сдвиг, и переход в состояние 66
+    t_assign  сдвиг, и переход в состояние 67
+    t_rb_o    сдвиг, и переход в состояние 68
+    t_rb_c    сдвиг, и переход в состояние 84
 
 
 состояние 71
 
-   57 expr: t_rb_o expr t_rb_c .
+    7 type_expr: t_rb_o type_expr t_rb_c .
 
-    $default  вывод с использованием правила 57 (expr)
+    $default  вывод с использованием правила 7 (type_expr)
 
 
 состояние 72
 
-   45 fun_args: fun_args t_comma expr .  [t_semi, t_comma, t_rb_c]
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+   14 var_defn: flags type_expr t_id t_assign . expr
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
+    error   сдвиг, и переход в состояние 46
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
 
-    $default  вывод с использованием правила 45 (fun_args)
+    expr  переход в состояние 85
 
 
 состояние 73
 
-   58 expr: expr . t_plus expr
-   58     | expr t_plus expr .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+   11 fun_decl: flags type_expr t_id t_rb_o . fun_params t_rb_c
+   12 fun_defn: flags type_expr t_id t_rb_o . fun_params t_rb_c body
+   13 var_decl: . flags type_expr t_id
+   15 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
+   16      | . t_auto
+   17      | . flags flag
+   18      | . flag
+   19 flag: . t_reserve
+   20     | . t_noreserve
+   21     | . t_fast
+   22     | . t_stack
+   23     | . t_locate pos
+   24     | . t_immortal
+   34 fun_params: .  [t_comma, t_rb_c]
+   35           | . t_void
+   36           | . fun_param
+   37           | . fun_params t_comma fun_param
+   38 fun_param: . var_decl
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
+    t_reserve    сдвиг, и переход в состояние 6
+    t_noreserve  сдвиг, и переход в состояние 7
+    t_fast       сдвиг, и переход в состояние 8
+    t_stack      сдвиг, и переход в состояние 9
+    t_locate     сдвиг, и переход в состояние 10
+    t_immortal   сдвиг, и переход в состояние 11
+    t_void       сдвиг, и переход в состояние 86
+    t_auto       сдвиг, и переход в состояние 12
 
-    t_plus    [вывод с использованием правила 58 (expr)]
-    t_minus   [вывод с использованием правила 58 (expr)]
-    t_mult    [вывод с использованием правила 58 (expr)]
-    t_div     [вывод с использованием правила 58 (expr)]
-    t_mod     [вывод с использованием правила 58 (expr)]
-    t_assign  [вывод с использованием правила 58 (expr)]
-    t_rb_o    [вывод с использованием правила 58 (expr)]
-    $default  вывод с использованием правила 58 (expr)
+    t_reserve    [вывод с использованием правила 15 (flags)]
+    t_noreserve  [вывод с использованием правила 15 (flags)]
+    t_fast       [вывод с использованием правила 15 (flags)]
+    t_stack      [вывод с использованием правила 15 (flags)]
+    t_locate     [вывод с использованием правила 15 (flags)]
+    t_immortal   [вывод с использованием правила 15 (flags)]
+    t_comma      вывод с использованием правила 34 (fun_params)
+    t_rb_c       вывод с использованием правила 34 (fun_params)
+    $default     вывод с использованием правила 15 (flags)
+
+    var_decl    переход в состояние 87
+    flags       переход в состояние 88
+    flag        переход в состояние 22
+    fun_params  переход в состояние 89
+    fun_param   переход в состояние 90
 
 
 состояние 74
 
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   59     | expr t_minus expr .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+   26 pos: t_rb_o t_id t_rb_c t_neg .
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
-
-    t_plus    [вывод с использованием правила 59 (expr)]
-    t_minus   [вывод с использованием правила 59 (expr)]
-    t_mult    [вывод с использованием правила 59 (expr)]
-    t_div     [вывод с использованием правила 59 (expr)]
-    t_mod     [вывод с использованием правила 59 (expr)]
-    t_assign  [вывод с использованием правила 59 (expr)]
-    t_rb_o    [вывод с использованием правила 59 (expr)]
-    $default  вывод с использованием правила 59 (expr)
+    $default  вывод с использованием правила 26 (pos)
 
 
 состояние 75
 
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   60     | expr t_mult expr .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+   59 expr: t_rb_o expr t_rb_c .
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
-
-    t_plus    [вывод с использованием правила 60 (expr)]
-    t_minus   [вывод с использованием правила 60 (expr)]
-    t_mult    [вывод с использованием правила 60 (expr)]
-    t_div     [вывод с использованием правила 60 (expr)]
-    t_mod     [вывод с использованием правила 60 (expr)]
-    t_assign  [вывод с использованием правила 60 (expr)]
-    t_rb_o    [вывод с использованием правила 60 (expr)]
-    $default  вывод с использованием правила 60 (expr)
+    $default  вывод с использованием правила 59 (expr)
 
 
 состояние 76
 
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   61     | expr t_div expr .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+   46 fun_args: fun_args t_comma expr .  [t_semi, t_comma, t_rb_c]
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
+    t_plus    сдвиг, и переход в состояние 62
+    t_minus   сдвиг, и переход в состояние 63
+    t_mult    сдвиг, и переход в состояние 64
+    t_div     сдвиг, и переход в состояние 65
+    t_mod     сдвиг, и переход в состояние 66
+    t_assign  сдвиг, и переход в состояние 67
+    t_rb_o    сдвиг, и переход в состояние 68
 
-    t_plus    [вывод с использованием правила 61 (expr)]
-    t_minus   [вывод с использованием правила 61 (expr)]
-    t_mult    [вывод с использованием правила 61 (expr)]
-    t_div     [вывод с использованием правила 61 (expr)]
-    t_mod     [вывод с использованием правила 61 (expr)]
-    t_assign  [вывод с использованием правила 61 (expr)]
-    t_rb_o    [вывод с использованием правила 61 (expr)]
-    $default  вывод с использованием правила 61 (expr)
+    $default  вывод с использованием правила 46 (fun_args)
 
 
 состояние 77
 
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   62     | expr t_mod expr .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+   60 expr: expr . t_plus expr
+   60     | expr t_plus expr .  [t_plus, t_minus, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
+    t_mult  сдвиг, и переход в состояние 64
+    t_div   сдвиг, и переход в состояние 65
+    t_mod   сдвиг, и переход в состояние 66
+    t_rb_o  сдвиг, и переход в состояние 68
 
-    t_plus    [вывод с использованием правила 62 (expr)]
-    t_minus   [вывод с использованием правила 62 (expr)]
-    t_mult    [вывод с использованием правила 62 (expr)]
-    t_div     [вывод с использованием правила 62 (expr)]
-    t_mod     [вывод с использованием правила 62 (expr)]
-    t_assign  [вывод с использованием правила 62 (expr)]
-    t_rb_o    [вывод с использованием правила 62 (expr)]
-    $default  вывод с использованием правила 62 (expr)
+    t_rb_o    [вывод с использованием правила 60 (expr)]
+    $default  вывод с использованием правила 60 (expr)
+
+    Конфликт между правилом 60 и лексемой t_plus разрешен выводом (%left t_plus).
+    Конфликт между правилом 60 и лексемой t_minus разрешен выводом (%left t_minus).
+    Конфликт между правилом 60 и лексемой t_mult разрешен сдвигом (t_plus < t_mult).
+    Конфликт между правилом 60 и лексемой t_div разрешен сдвигом (t_plus < t_div).
+    Конфликт между правилом 60 и лексемой t_mod разрешен сдвигом (t_plus < t_mod).
+    Конфликт между правилом 60 и лексемой t_assign разрешен выводом (t_assign < t_plus).
 
 
 состояние 78
 
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
-   64     | expr t_assign expr .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   61     | expr t_minus expr .  [t_plus, t_minus, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
+    t_mult  сдвиг, и переход в состояние 64
+    t_div   сдвиг, и переход в состояние 65
+    t_mod   сдвиг, и переход в состояние 66
+    t_rb_o  сдвиг, и переход в состояние 68
 
-    t_plus    [вывод с использованием правила 64 (expr)]
-    t_minus   [вывод с использованием правила 64 (expr)]
-    t_mult    [вывод с использованием правила 64 (expr)]
-    t_div     [вывод с использованием правила 64 (expr)]
-    t_mod     [вывод с использованием правила 64 (expr)]
-    t_assign  [вывод с использованием правила 64 (expr)]
-    t_rb_o    [вывод с использованием правила 64 (expr)]
-    $default  вывод с использованием правила 64 (expr)
+    t_rb_o    [вывод с использованием правила 61 (expr)]
+    $default  вывод с использованием правила 61 (expr)
+
+    Конфликт между правилом 61 и лексемой t_plus разрешен выводом (%left t_plus).
+    Конфликт между правилом 61 и лексемой t_minus разрешен выводом (%left t_minus).
+    Конфликт между правилом 61 и лексемой t_mult разрешен сдвигом (t_minus < t_mult).
+    Конфликт между правилом 61 и лексемой t_div разрешен сдвигом (t_minus < t_div).
+    Конфликт между правилом 61 и лексемой t_mod разрешен сдвигом (t_minus < t_mod).
+    Конфликт между правилом 61 и лексемой t_assign разрешен выводом (t_assign < t_minus).
 
 
 состояние 79
 
-   45 fun_args: fun_args . t_comma expr
-   63 expr: expr t_rb_o fun_args . t_rb_c
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   62     | expr t_mult expr .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    t_comma  сдвиг, и переход в состояние 57
-    t_rb_c   сдвиг, и переход в состояние 87
+    t_rb_o  сдвиг, и переход в состояние 68
+
+    t_rb_o    [вывод с использованием правила 62 (expr)]
+    $default  вывод с использованием правила 62 (expr)
+
+    Конфликт между правилом 62 и лексемой t_plus разрешен выводом (t_plus < t_mult).
+    Конфликт между правилом 62 и лексемой t_minus разрешен выводом (t_minus < t_mult).
+    Конфликт между правилом 62 и лексемой t_mult разрешен выводом (%left t_mult).
+    Конфликт между правилом 62 и лексемой t_div разрешен выводом (%left t_div).
+    Конфликт между правилом 62 и лексемой t_mod разрешен выводом (%left t_mod).
+    Конфликт между правилом 62 и лексемой t_assign разрешен выводом (t_assign < t_mult).
 
 
 состояние 80
 
-    8 type_expr: t_gettype t_rb_o expr t_rb_c .
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   63     | expr t_div expr .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    $default  вывод с использованием правила 8 (type_expr)
+    t_rb_o  сдвиг, и переход в состояние 68
+
+    t_rb_o    [вывод с использованием правила 63 (expr)]
+    $default  вывод с использованием правила 63 (expr)
+
+    Конфликт между правилом 63 и лексемой t_plus разрешен выводом (t_plus < t_div).
+    Конфликт между правилом 63 и лексемой t_minus разрешен выводом (t_minus < t_div).
+    Конфликт между правилом 63 и лексемой t_mult разрешен выводом (%left t_mult).
+    Конфликт между правилом 63 и лексемой t_div разрешен выводом (%left t_div).
+    Конфликт между правилом 63 и лексемой t_mod разрешен выводом (%left t_mod).
+    Конфликт между правилом 63 и лексемой t_assign разрешен выводом (t_assign < t_div).
 
 
 состояние 81
 
-   13 var_defn: flags type_expr t_id t_assign expr .  [t_semi]
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   64     | expr t_mod expr .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_comma, t_assign, t_rb_o, t_rb_c]
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
+    t_rb_o  сдвиг, и переход в состояние 68
 
-    $default  вывод с использованием правила 13 (var_defn)
+    t_rb_o    [вывод с использованием правила 64 (expr)]
+    $default  вывод с использованием правила 64 (expr)
+
+    Конфликт между правилом 64 и лексемой t_plus разрешен выводом (t_plus < t_mod).
+    Конфликт между правилом 64 и лексемой t_minus разрешен выводом (t_minus < t_mod).
+    Конфликт между правилом 64 и лексемой t_mult разрешен выводом (%left t_mult).
+    Конфликт между правилом 64 и лексемой t_div разрешен выводом (%left t_div).
+    Конфликт между правилом 64 и лексемой t_mod разрешен выводом (%left t_mod).
+    Конфликт между правилом 64 и лексемой t_assign разрешен выводом (t_assign < t_mod).
 
 
 состояние 82
 
-   34 fun_params: t_void .
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
+   66     | expr t_assign expr .  [t_semi, t_comma, t_rb_o, t_rb_c]
 
-    $default  вывод с использованием правила 34 (fun_params)
+    t_plus    сдвиг, и переход в состояние 62
+    t_minus   сдвиг, и переход в состояние 63
+    t_mult    сдвиг, и переход в состояние 64
+    t_div     сдвиг, и переход в состояние 65
+    t_mod     сдвиг, и переход в состояние 66
+    t_assign  сдвиг, и переход в состояние 67
+    t_rb_o    сдвиг, и переход в состояние 68
+
+    t_rb_o    [вывод с использованием правила 66 (expr)]
+    $default  вывод с использованием правила 66 (expr)
+
+    Конфликт между правилом 66 и лексемой t_plus разрешен сдвигом (t_assign < t_plus).
+    Конфликт между правилом 66 и лексемой t_minus разрешен сдвигом (t_assign < t_minus).
+    Конфликт между правилом 66 и лексемой t_mult разрешен сдвигом (t_assign < t_mult).
+    Конфликт между правилом 66 и лексемой t_div разрешен сдвигом (t_assign < t_div).
+    Конфликт между правилом 66 и лексемой t_mod разрешен сдвигом (t_assign < t_mod).
+    Конфликт между правилом 66 и лексемой t_assign разрешен сдвигом (%right t_assign).
 
 
 состояние 83
 
-   37 fun_param: var_decl .
+   46 fun_args: fun_args . t_comma expr
+   65 expr: expr t_rb_o fun_args . t_rb_c
 
-    $default  вывод с использованием правила 37 (fun_param)
+    t_comma  сдвиг, и переход в состояние 61
+    t_rb_c   сдвиг, и переход в состояние 91
 
 
 состояние 84
 
-    6 type_expr: . t_rb_o type_expr t_rb_c
-    7          | . t_tname
-    8          | . t_gettype t_rb_o expr t_rb_c
-    9          | . t_gettype t_rb_o t_rb_c
-   12 var_decl: flags . type_expr t_id
-   16 flags: flags . flag
-   18 flag: . t_reserve
-   19     | . t_noreserve
-   20     | . t_fast
-   21     | . t_stack
-   22     | . t_locate pos
-   23     | . t_immortal
+    9 type_expr: t_gettype t_rb_o expr t_rb_c .
 
-    t_gettype    сдвиг, и переход в состояние 32
-    t_reserve    сдвиг, и переход в состояние 4
-    t_noreserve  сдвиг, и переход в состояние 5
-    t_fast       сдвиг, и переход в состояние 6
-    t_stack      сдвиг, и переход в состояние 7
-    t_locate     сдвиг, и переход в состояние 8
-    t_immortal   сдвиг, и переход в состояние 9
-    t_rb_o       сдвиг, и переход в состояние 33
-    t_tname      сдвиг, и переход в состояние 34
-
-    type_expr  переход в состояние 88
-    flag       переход в состояние 36
+    $default  вывод с использованием правила 9 (type_expr)
 
 
 состояние 85
 
-   10 fun_decl: flags type_expr t_id t_rb_o fun_params . t_rb_c
-   11 fun_defn: flags type_expr t_id t_rb_o fun_params . t_rb_c body
-   36 fun_params: fun_params . t_comma fun_param
+   14 var_defn: flags type_expr t_id t_assign expr .  [t_semi]
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    t_comma  сдвиг, и переход в состояние 89
-    t_rb_c   сдвиг, и переход в состояние 90
+    t_plus    сдвиг, и переход в состояние 62
+    t_minus   сдвиг, и переход в состояние 63
+    t_mult    сдвиг, и переход в состояние 64
+    t_div     сдвиг, и переход в состояние 65
+    t_mod     сдвиг, и переход в состояние 66
+    t_assign  сдвиг, и переход в состояние 67
+    t_rb_o    сдвиг, и переход в состояние 68
+
+    $default  вывод с использованием правила 14 (var_defn)
 
 
 состояние 86
 
-   35 fun_params: fun_param .
+   35 fun_params: t_void .
 
     $default  вывод с использованием правила 35 (fun_params)
 
 
 состояние 87
 
-   63 expr: expr t_rb_o fun_args t_rb_c .
+   38 fun_param: var_decl .
 
-    $default  вывод с использованием правила 63 (expr)
+    $default  вывод с использованием правила 38 (fun_param)
 
 
 состояние 88
 
-   12 var_decl: flags type_expr . t_id
+    7 type_expr: . t_rb_o type_expr t_rb_c
+    8          | . t_tname
+    9          | . t_gettype t_rb_o expr t_rb_c
+   10          | . t_gettype t_rb_o t_rb_c
+   13 var_decl: flags . type_expr t_id
+   17 flags: flags . flag
+   19 flag: . t_reserve
+   20     | . t_noreserve
+   21     | . t_fast
+   22     | . t_stack
+   23     | . t_locate pos
+   24     | . t_immortal
 
-    t_id  сдвиг, и переход в состояние 91
+    t_gettype    сдвиг, и переход в состояние 36
+    t_reserve    сдвиг, и переход в состояние 6
+    t_noreserve  сдвиг, и переход в состояние 7
+    t_fast       сдвиг, и переход в состояние 8
+    t_stack      сдвиг, и переход в состояние 9
+    t_locate     сдвиг, и переход в состояние 10
+    t_immortal   сдвиг, и переход в состояние 11
+    t_rb_o       сдвиг, и переход в состояние 37
+    t_tname      сдвиг, и переход в состояние 38
+
+    type_expr  переход в состояние 92
+    flag       переход в состояние 40
 
 
 состояние 89
 
-   12 var_decl: . flags type_expr t_id
-   14 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
-   15      | . t_auto
-   16      | . flags flag
-   17      | . flag
-   18 flag: . t_reserve
-   19     | . t_noreserve
-   20     | . t_fast
-   21     | . t_stack
-   22     | . t_locate pos
-   23     | . t_immortal
-   36 fun_params: fun_params t_comma . fun_param
-   37 fun_param: . var_decl
+   11 fun_decl: flags type_expr t_id t_rb_o fun_params . t_rb_c
+   12 fun_defn: flags type_expr t_id t_rb_o fun_params . t_rb_c body
+   37 fun_params: fun_params . t_comma fun_param
 
-    t_reserve    сдвиг, и переход в состояние 4
-    t_noreserve  сдвиг, и переход в состояние 5
-    t_fast       сдвиг, и переход в состояние 6
-    t_stack      сдвиг, и переход в состояние 7
-    t_locate     сдвиг, и переход в состояние 8
-    t_immortal   сдвиг, и переход в состояние 9
-    t_auto       сдвиг, и переход в состояние 10
-
-    t_reserve    [вывод с использованием правила 14 (flags)]
-    t_noreserve  [вывод с использованием правила 14 (flags)]
-    t_fast       [вывод с использованием правила 14 (flags)]
-    t_stack      [вывод с использованием правила 14 (flags)]
-    t_locate     [вывод с использованием правила 14 (flags)]
-    t_immortal   [вывод с использованием правила 14 (flags)]
-    $default     вывод с использованием правила 14 (flags)
-
-    var_decl   переход в состояние 83
-    flags      переход в состояние 84
-    flag       переход в состояние 19
-    fun_param  переход в состояние 92
+    t_comma  сдвиг, и переход в состояние 93
+    t_rb_c   сдвиг, и переход в состояние 94
 
 
 состояние 90
 
-   10 fun_decl: flags type_expr t_id t_rb_o fun_params t_rb_c .  [t_semi]
-   11 fun_defn: flags type_expr t_id t_rb_o fun_params t_rb_c . body
-   38 body: . t_fb_o bodycoms t_fb_c
-   39     | . t_fb_o t_fb_c
-   40     | . error
-
-    error   сдвиг, и переход в состояние 93
-    t_fb_o  сдвиг, и переход в состояние 94
-
-    t_semi  вывод с использованием правила 10 (fun_decl)
-
-    body  переход в состояние 95
-
-
-состояние 91
-
-   12 var_decl: flags type_expr t_id .
-
-    $default  вывод с использованием правила 12 (var_decl)
-
-
-состояние 92
-
-   36 fun_params: fun_params t_comma fun_param .
+   36 fun_params: fun_param .
 
     $default  вывод с использованием правила 36 (fun_params)
 
 
+состояние 91
+
+   65 expr: expr t_rb_o fun_args t_rb_c .
+
+    $default  вывод с использованием правила 65 (expr)
+
+
+состояние 92
+
+   13 var_decl: flags type_expr . t_id
+
+    t_id  сдвиг, и переход в состояние 95
+
+
 состояние 93
 
-   40 body: error .
+   13 var_decl: . flags type_expr t_id
+   15 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
+   16      | . t_auto
+   17      | . flags flag
+   18      | . flag
+   19 flag: . t_reserve
+   20     | . t_noreserve
+   21     | . t_fast
+   22     | . t_stack
+   23     | . t_locate pos
+   24     | . t_immortal
+   37 fun_params: fun_params t_comma . fun_param
+   38 fun_param: . var_decl
 
-    $default  вывод с использованием правила 40 (body)
+    t_reserve    сдвиг, и переход в состояние 6
+    t_noreserve  сдвиг, и переход в состояние 7
+    t_fast       сдвиг, и переход в состояние 8
+    t_stack      сдвиг, и переход в состояние 9
+    t_locate     сдвиг, и переход в состояние 10
+    t_immortal   сдвиг, и переход в состояние 11
+    t_auto       сдвиг, и переход в состояние 12
+
+    t_reserve    [вывод с использованием правила 15 (flags)]
+    t_noreserve  [вывод с использованием правила 15 (flags)]
+    t_fast       [вывод с использованием правила 15 (flags)]
+    t_stack      [вывод с использованием правила 15 (flags)]
+    t_locate     [вывод с использованием правила 15 (flags)]
+    t_immortal   [вывод с использованием правила 15 (flags)]
+    $default     вывод с использованием правила 15 (flags)
+
+    var_decl   переход в состояние 87
+    flags      переход в состояние 88
+    flag       переход в состояние 22
+    fun_param  переход в состояние 96
 
 
 состояние 94
 
-   12 var_decl: . flags type_expr t_id
-   13 var_defn: . flags type_expr t_id t_assign expr
-   14 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
-   15      | . t_auto
-   16      | . flags flag
-   17      | . flag
-   18 flag: . t_reserve
-   19     | . t_noreserve
-   20     | . t_fast
-   21     | . t_stack
-   22     | . t_locate pos
-   23     | . t_immortal
-   38 body: t_fb_o . bodycoms t_fb_c
-   39     | t_fb_o . t_fb_c
-   41 bodycoms: . bodycom
-   42         | . bodycoms bodycom
-   43         | . bodycoms t_semi
-   49 asm: . t_spec aid fun_args
-   50 bodycom: . var_decl t_semi
-   51        | . var_defn t_semi
-   52        | . t_return expr t_semi
-   53        | . t_return t_semi
-   54        | . expr t_semi
-   55        | . asm t_semi
-   56        | . error t_semi
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   11 fun_decl: flags type_expr t_id t_rb_o fun_params t_rb_c .  [t_semi]
+   12 fun_defn: flags type_expr t_id t_rb_o fun_params t_rb_c . body
+   39 body: . t_fb_o bodycoms t_fb_c
+   40     | . t_fb_o t_fb_c
+   41     | . error
 
-    error        сдвиг, и переход в состояние 96
-    t_return     сдвиг, и переход в состояние 97
-    t_reserve    сдвиг, и переход в состояние 4
-    t_noreserve  сдвиг, и переход в состояние 5
-    t_fast       сдвиг, и переход в состояние 6
-    t_stack      сдвиг, и переход в состояние 7
-    t_locate     сдвиг, и переход в состояние 8
-    t_immortal   сдвиг, и переход в состояние 9
-    t_auto       сдвиг, и переход в состояние 10
-    t_rb_o       сдвиг, и переход в состояние 44
-    t_fb_c       сдвиг, и переход в состояние 98
-    t_spec       сдвиг, и переход в состояние 12
-    t_id         сдвиг, и переход в состояние 45
-    t_num        сдвиг, и переход в состояние 46
+    error   сдвиг, и переход в состояние 97
+    t_fb_o  сдвиг, и переход в состояние 98
 
-    t_gettype    вывод с использованием правила 14 (flags)
-    t_reserve    [вывод с использованием правила 14 (flags)]
-    t_noreserve  [вывод с использованием правила 14 (flags)]
-    t_fast       [вывод с использованием правила 14 (flags)]
-    t_stack      [вывод с использованием правила 14 (flags)]
-    t_locate     [вывод с использованием правила 14 (flags)]
-    t_immortal   [вывод с использованием правила 14 (flags)]
-    t_rb_o       [вывод с использованием правила 14 (flags)]
-    t_tname      вывод с использованием правила 14 (flags)
+    t_semi  вывод с использованием правила 11 (fun_decl)
 
-    var_decl  переход в состояние 99
-    var_defn  переход в состояние 100
-    flags     переход в состояние 101
-    flag      переход в состояние 19
-    bodycoms  переход в состояние 102
-    asm       переход в состояние 103
-    bodycom   переход в состояние 104
-    expr      переход в состояние 105
+    body  переход в состояние 99
 
 
 состояние 95
 
-   11 fun_defn: flags type_expr t_id t_rb_o fun_params t_rb_c body .
+   13 var_decl: flags type_expr t_id .
 
-    $default  вывод с использованием правила 11 (fun_defn)
+    $default  вывод с использованием правила 13 (var_decl)
 
 
 состояние 96
 
-   56 bodycom: error . t_semi
-   67 expr: error .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_assign, t_rb_o]
+   37 fun_params: fun_params t_comma fun_param .
 
-    t_semi  сдвиг, и переход в состояние 106
-
-    t_semi    [вывод с использованием правила 67 (expr)]
-    $default  вывод с использованием правила 67 (expr)
+    $default  вывод с использованием правила 37 (fun_params)
 
 
 состояние 97
 
-   52 bodycom: t_return . expr t_semi
-   53        | t_return . t_semi
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   41 body: error .
 
-    error   сдвиг, и переход в состояние 42
-    t_semi  сдвиг, и переход в состояние 107
-    t_rb_o  сдвиг, и переход в состояние 44
-    t_id    сдвиг, и переход в состояние 45
-    t_num   сдвиг, и переход в состояние 46
-
-    expr  переход в состояние 108
+    $default  вывод с использованием правила 41 (body)
 
 
 состояние 98
 
-   39 body: t_fb_o t_fb_c .
+   13 var_decl: . flags type_expr t_id
+   14 var_defn: . flags type_expr t_id t_assign expr
+   15 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
+   16      | . t_auto
+   17      | . flags flag
+   18      | . flag
+   19 flag: . t_reserve
+   20     | . t_noreserve
+   21     | . t_fast
+   22     | . t_stack
+   23     | . t_locate pos
+   24     | . t_immortal
+   39 body: t_fb_o . bodycoms t_fb_c
+   40     | t_fb_o . t_fb_c
+   42 bodycoms: . bodycom
+   43         | . bodycoms bodycom
+   44         | . bodycoms t_semi
+   50 asm: . t_lshift aid fun_args
+   51    | . t_asm t_fb_o
+   52 bodycom: . var_decl t_semi
+   53        | . var_defn t_semi
+   54        | . t_return expr t_semi
+   55        | . t_return t_semi
+   56        | . expr t_semi
+   57        | . asm t_semi
+   58        | . error t_semi
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    $default  вывод с использованием правила 39 (body)
+    error        сдвиг, и переход в состояние 100
+    t_return     сдвиг, и переход в состояние 101
+    t_reserve    сдвиг, и переход в состояние 6
+    t_noreserve  сдвиг, и переход в состояние 7
+    t_fast       сдвиг, и переход в состояние 8
+    t_stack      сдвиг, и переход в состояние 9
+    t_locate     сдвиг, и переход в состояние 10
+    t_immortal   сдвиг, и переход в состояние 11
+    t_auto       сдвиг, и переход в состояние 12
+    t_asm        сдвиг, и переход в состояние 13
+    t_rb_o       сдвиг, и переход в состояние 48
+    t_fb_c       сдвиг, и переход в состояние 102
+    t_lshift     сдвиг, и переход в состояние 15
+    t_id         сдвиг, и переход в состояние 49
+    t_num        сдвиг, и переход в состояние 50
+
+    t_gettype    вывод с использованием правила 15 (flags)
+    t_reserve    [вывод с использованием правила 15 (flags)]
+    t_noreserve  [вывод с использованием правила 15 (flags)]
+    t_fast       [вывод с использованием правила 15 (flags)]
+    t_stack      [вывод с использованием правила 15 (flags)]
+    t_locate     [вывод с использованием правила 15 (flags)]
+    t_immortal   [вывод с использованием правила 15 (flags)]
+    t_rb_o       [вывод с использованием правила 15 (flags)]
+    t_tname      вывод с использованием правила 15 (flags)
+
+    var_decl  переход в состояние 103
+    var_defn  переход в состояние 104
+    flags     переход в состояние 105
+    flag      переход в состояние 22
+    bodycoms  переход в состояние 106
+    asm       переход в состояние 107
+    bodycom   переход в состояние 108
+    expr      переход в состояние 109
 
 
 состояние 99
 
-   50 bodycom: var_decl . t_semi
+   12 fun_defn: flags type_expr t_id t_rb_o fun_params t_rb_c body .
 
-    t_semi  сдвиг, и переход в состояние 109
+    $default  вывод с использованием правила 12 (fun_defn)
 
 
 состояние 100
 
-   51 bodycom: var_defn . t_semi
+   58 bodycom: error . t_semi
+   69 expr: error .  [t_plus, t_minus, t_mult, t_div, t_mod, t_semi, t_assign, t_rb_o]
 
     t_semi  сдвиг, и переход в состояние 110
+
+    t_semi    [вывод с использованием правила 69 (expr)]
+    $default  вывод с использованием правила 69 (expr)
 
 
 состояние 101
 
-    6 type_expr: . t_rb_o type_expr t_rb_c
-    7          | . t_tname
-    8          | . t_gettype t_rb_o expr t_rb_c
-    9          | . t_gettype t_rb_o t_rb_c
-   12 var_decl: flags . type_expr t_id
-   13 var_defn: flags . type_expr t_id t_assign expr
-   16 flags: flags . flag
-   18 flag: . t_reserve
-   19     | . t_noreserve
-   20     | . t_fast
-   21     | . t_stack
-   22     | . t_locate pos
-   23     | . t_immortal
+   54 bodycom: t_return . expr t_semi
+   55        | t_return . t_semi
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    t_gettype    сдвиг, и переход в состояние 32
-    t_reserve    сдвиг, и переход в состояние 4
-    t_noreserve  сдвиг, и переход в состояние 5
-    t_fast       сдвиг, и переход в состояние 6
-    t_stack      сдвиг, и переход в состояние 7
-    t_locate     сдвиг, и переход в состояние 8
-    t_immortal   сдвиг, и переход в состояние 9
-    t_rb_o       сдвиг, и переход в состояние 33
-    t_tname      сдвиг, и переход в состояние 34
+    error   сдвиг, и переход в состояние 46
+    t_semi  сдвиг, и переход в состояние 111
+    t_rb_o  сдвиг, и переход в состояние 48
+    t_id    сдвиг, и переход в состояние 49
+    t_num   сдвиг, и переход в состояние 50
 
-    type_expr  переход в состояние 111
-    flag       переход в состояние 36
+    expr  переход в состояние 112
 
 
 состояние 102
 
-   12 var_decl: . flags type_expr t_id
-   13 var_defn: . flags type_expr t_id t_assign expr
-   14 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
-   15      | . t_auto
-   16      | . flags flag
-   17      | . flag
-   18 flag: . t_reserve
-   19     | . t_noreserve
-   20     | . t_fast
-   21     | . t_stack
-   22     | . t_locate pos
-   23     | . t_immortal
-   38 body: t_fb_o bodycoms . t_fb_c
-   42 bodycoms: bodycoms . bodycom
-   43         | bodycoms . t_semi
-   49 asm: . t_spec aid fun_args
-   50 bodycom: . var_decl t_semi
-   51        | . var_defn t_semi
-   52        | . t_return expr t_semi
-   53        | . t_return t_semi
-   54        | . expr t_semi
-   55        | . asm t_semi
-   56        | . error t_semi
-   57 expr: . t_rb_o expr t_rb_c
-   58     | . expr t_plus expr
-   59     | . expr t_minus expr
-   60     | . expr t_mult expr
-   61     | . expr t_div expr
-   62     | . expr t_mod expr
-   63     | . expr t_rb_o fun_args t_rb_c
-   64     | . expr t_assign expr
-   65     | . t_num
-   66     | . t_id
-   67     | . error
+   40 body: t_fb_o t_fb_c .
 
-    error        сдвиг, и переход в состояние 96
-    t_return     сдвиг, и переход в состояние 97
-    t_reserve    сдвиг, и переход в состояние 4
-    t_noreserve  сдвиг, и переход в состояние 5
-    t_fast       сдвиг, и переход в состояние 6
-    t_stack      сдвиг, и переход в состояние 7
-    t_locate     сдвиг, и переход в состояние 8
-    t_immortal   сдвиг, и переход в состояние 9
-    t_auto       сдвиг, и переход в состояние 10
-    t_semi       сдвиг, и переход в состояние 112
-    t_rb_o       сдвиг, и переход в состояние 44
-    t_fb_c       сдвиг, и переход в состояние 113
-    t_spec       сдвиг, и переход в состояние 12
-    t_id         сдвиг, и переход в состояние 45
-    t_num        сдвиг, и переход в состояние 46
-
-    t_gettype    вывод с использованием правила 14 (flags)
-    t_reserve    [вывод с использованием правила 14 (flags)]
-    t_noreserve  [вывод с использованием правила 14 (flags)]
-    t_fast       [вывод с использованием правила 14 (flags)]
-    t_stack      [вывод с использованием правила 14 (flags)]
-    t_locate     [вывод с использованием правила 14 (flags)]
-    t_immortal   [вывод с использованием правила 14 (flags)]
-    t_rb_o       [вывод с использованием правила 14 (flags)]
-    t_tname      вывод с использованием правила 14 (flags)
-
-    var_decl  переход в состояние 99
-    var_defn  переход в состояние 100
-    flags     переход в состояние 101
-    flag      переход в состояние 19
-    asm       переход в состояние 103
-    bodycom   переход в состояние 114
-    expr      переход в состояние 105
+    $default  вывод с использованием правила 40 (body)
 
 
 состояние 103
 
-   55 bodycom: asm . t_semi
+   52 bodycom: var_decl . t_semi
 
-    t_semi  сдвиг, и переход в состояние 115
+    t_semi  сдвиг, и переход в состояние 113
 
 
 состояние 104
 
-   41 bodycoms: bodycom .
+   53 bodycom: var_defn . t_semi
 
-    $default  вывод с использованием правила 41 (bodycoms)
+    t_semi  сдвиг, и переход в состояние 114
 
 
 состояние 105
 
-   54 bodycom: expr . t_semi
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
+    7 type_expr: . t_rb_o type_expr t_rb_c
+    8          | . t_tname
+    9          | . t_gettype t_rb_o expr t_rb_c
+   10          | . t_gettype t_rb_o t_rb_c
+   13 var_decl: flags . type_expr t_id
+   14 var_defn: flags . type_expr t_id t_assign expr
+   17 flags: flags . flag
+   19 flag: . t_reserve
+   20     | . t_noreserve
+   21     | . t_fast
+   22     | . t_stack
+   23     | . t_locate pos
+   24     | . t_immortal
 
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_semi    сдвиг, и переход в состояние 116
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
+    t_gettype    сдвиг, и переход в состояние 36
+    t_reserve    сдвиг, и переход в состояние 6
+    t_noreserve  сдвиг, и переход в состояние 7
+    t_fast       сдвиг, и переход в состояние 8
+    t_stack      сдвиг, и переход в состояние 9
+    t_locate     сдвиг, и переход в состояние 10
+    t_immortal   сдвиг, и переход в состояние 11
+    t_rb_o       сдвиг, и переход в состояние 37
+    t_tname      сдвиг, и переход в состояние 38
+
+    type_expr  переход в состояние 115
+    flag       переход в состояние 40
 
 
 состояние 106
 
-   56 bodycom: error t_semi .
+   13 var_decl: . flags type_expr t_id
+   14 var_defn: . flags type_expr t_id t_assign expr
+   15 flags: .  [t_gettype, t_reserve, t_noreserve, t_fast, t_stack, t_locate, t_immortal, t_rb_o, t_tname]
+   16      | . t_auto
+   17      | . flags flag
+   18      | . flag
+   19 flag: . t_reserve
+   20     | . t_noreserve
+   21     | . t_fast
+   22     | . t_stack
+   23     | . t_locate pos
+   24     | . t_immortal
+   39 body: t_fb_o bodycoms . t_fb_c
+   43 bodycoms: bodycoms . bodycom
+   44         | bodycoms . t_semi
+   50 asm: . t_lshift aid fun_args
+   51    | . t_asm t_fb_o
+   52 bodycom: . var_decl t_semi
+   53        | . var_defn t_semi
+   54        | . t_return expr t_semi
+   55        | . t_return t_semi
+   56        | . expr t_semi
+   57        | . asm t_semi
+   58        | . error t_semi
+   59 expr: . t_rb_o expr t_rb_c
+   60     | . expr t_plus expr
+   61     | . expr t_minus expr
+   62     | . expr t_mult expr
+   63     | . expr t_div expr
+   64     | . expr t_mod expr
+   65     | . expr t_rb_o fun_args t_rb_c
+   66     | . expr t_assign expr
+   67     | . t_num
+   68     | . t_id
+   69     | . error
 
-    $default  вывод с использованием правила 56 (bodycom)
+    error        сдвиг, и переход в состояние 100
+    t_return     сдвиг, и переход в состояние 101
+    t_reserve    сдвиг, и переход в состояние 6
+    t_noreserve  сдвиг, и переход в состояние 7
+    t_fast       сдвиг, и переход в состояние 8
+    t_stack      сдвиг, и переход в состояние 9
+    t_locate     сдвиг, и переход в состояние 10
+    t_immortal   сдвиг, и переход в состояние 11
+    t_auto       сдвиг, и переход в состояние 12
+    t_asm        сдвиг, и переход в состояние 13
+    t_semi       сдвиг, и переход в состояние 116
+    t_rb_o       сдвиг, и переход в состояние 48
+    t_fb_c       сдвиг, и переход в состояние 117
+    t_lshift     сдвиг, и переход в состояние 15
+    t_id         сдвиг, и переход в состояние 49
+    t_num        сдвиг, и переход в состояние 50
+
+    t_gettype    вывод с использованием правила 15 (flags)
+    t_reserve    [вывод с использованием правила 15 (flags)]
+    t_noreserve  [вывод с использованием правила 15 (flags)]
+    t_fast       [вывод с использованием правила 15 (flags)]
+    t_stack      [вывод с использованием правила 15 (flags)]
+    t_locate     [вывод с использованием правила 15 (flags)]
+    t_immortal   [вывод с использованием правила 15 (flags)]
+    t_rb_o       [вывод с использованием правила 15 (flags)]
+    t_tname      вывод с использованием правила 15 (flags)
+
+    var_decl  переход в состояние 103
+    var_defn  переход в состояние 104
+    flags     переход в состояние 105
+    flag      переход в состояние 22
+    asm       переход в состояние 107
+    bodycom   переход в состояние 118
+    expr      переход в состояние 109
 
 
 состояние 107
 
-   53 bodycom: t_return t_semi .
+   57 bodycom: asm . t_semi
 
-    $default  вывод с использованием правила 53 (bodycom)
+    t_semi  сдвиг, и переход в состояние 119
 
 
 состояние 108
 
-   52 bodycom: t_return expr . t_semi
-   58 expr: expr . t_plus expr
-   59     | expr . t_minus expr
-   60     | expr . t_mult expr
-   61     | expr . t_div expr
-   62     | expr . t_mod expr
-   63     | expr . t_rb_o fun_args t_rb_c
-   64     | expr . t_assign expr
-
-    t_plus    сдвиг, и переход в состояние 58
-    t_minus   сдвиг, и переход в состояние 59
-    t_mult    сдвиг, и переход в состояние 60
-    t_div     сдвиг, и переход в состояние 61
-    t_mod     сдвиг, и переход в состояние 62
-    t_semi    сдвиг, и переход в состояние 117
-    t_assign  сдвиг, и переход в состояние 63
-    t_rb_o    сдвиг, и переход в состояние 64
-
-
-состояние 109
-
-   50 bodycom: var_decl t_semi .
-
-    $default  вывод с использованием правила 50 (bodycom)
-
-
-состояние 110
-
-   51 bodycom: var_defn t_semi .
-
-    $default  вывод с использованием правила 51 (bodycom)
-
-
-состояние 111
-
-   12 var_decl: flags type_expr . t_id
-   13 var_defn: flags type_expr . t_id t_assign expr
-
-    t_id  сдвиг, и переход в состояние 118
-
-
-состояние 112
-
-   43 bodycoms: bodycoms t_semi .
-
-    $default  вывод с использованием правила 43 (bodycoms)
-
-
-состояние 113
-
-   38 body: t_fb_o bodycoms t_fb_c .
-
-    $default  вывод с использованием правила 38 (body)
-
-
-состояние 114
-
-   42 bodycoms: bodycoms bodycom .
+   42 bodycoms: bodycom .
 
     $default  вывод с использованием правила 42 (bodycoms)
 
 
-состояние 115
+состояние 109
 
-   55 bodycom: asm t_semi .
+   56 bodycom: expr . t_semi
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
+
+    t_plus    сдвиг, и переход в состояние 62
+    t_minus   сдвиг, и переход в состояние 63
+    t_mult    сдвиг, и переход в состояние 64
+    t_div     сдвиг, и переход в состояние 65
+    t_mod     сдвиг, и переход в состояние 66
+    t_semi    сдвиг, и переход в состояние 120
+    t_assign  сдвиг, и переход в состояние 67
+    t_rb_o    сдвиг, и переход в состояние 68
+
+
+состояние 110
+
+   58 bodycom: error t_semi .
+
+    $default  вывод с использованием правила 58 (bodycom)
+
+
+состояние 111
+
+   55 bodycom: t_return t_semi .
 
     $default  вывод с использованием правила 55 (bodycom)
 
 
-состояние 116
+состояние 112
 
-   54 bodycom: expr t_semi .
+   54 bodycom: t_return expr . t_semi
+   60 expr: expr . t_plus expr
+   61     | expr . t_minus expr
+   62     | expr . t_mult expr
+   63     | expr . t_div expr
+   64     | expr . t_mod expr
+   65     | expr . t_rb_o fun_args t_rb_c
+   66     | expr . t_assign expr
 
-    $default  вывод с использованием правила 54 (bodycom)
+    t_plus    сдвиг, и переход в состояние 62
+    t_minus   сдвиг, и переход в состояние 63
+    t_mult    сдвиг, и переход в состояние 64
+    t_div     сдвиг, и переход в состояние 65
+    t_mod     сдвиг, и переход в состояние 66
+    t_semi    сдвиг, и переход в состояние 121
+    t_assign  сдвиг, и переход в состояние 67
+    t_rb_o    сдвиг, и переход в состояние 68
 
 
-состояние 117
+состояние 113
 
-   52 bodycom: t_return expr t_semi .
+   52 bodycom: var_decl t_semi .
 
     $default  вывод с использованием правила 52 (bodycom)
 
 
+состояние 114
+
+   53 bodycom: var_defn t_semi .
+
+    $default  вывод с использованием правила 53 (bodycom)
+
+
+состояние 115
+
+   13 var_decl: flags type_expr . t_id
+   14 var_defn: flags type_expr . t_id t_assign expr
+
+    t_id  сдвиг, и переход в состояние 122
+
+
+состояние 116
+
+   44 bodycoms: bodycoms t_semi .
+
+    $default  вывод с использованием правила 44 (bodycoms)
+
+
+состояние 117
+
+   39 body: t_fb_o bodycoms t_fb_c .
+
+    $default  вывод с использованием правила 39 (body)
+
+
 состояние 118
 
-   12 var_decl: flags type_expr t_id .  [t_semi]
-   13 var_defn: flags type_expr t_id . t_assign expr
+   43 bodycoms: bodycoms bodycom .
 
-    t_assign  сдвиг, и переход в состояние 68
+    $default  вывод с использованием правила 43 (bodycoms)
 
-    $default  вывод с использованием правила 12 (var_decl)
+
+состояние 119
+
+   57 bodycom: asm t_semi .
+
+    $default  вывод с использованием правила 57 (bodycom)
+
+
+состояние 120
+
+   56 bodycom: expr t_semi .
+
+    $default  вывод с использованием правила 56 (bodycom)
+
+
+состояние 121
+
+   54 bodycom: t_return expr t_semi .
+
+    $default  вывод с использованием правила 54 (bodycom)
+
+
+состояние 122
+
+   13 var_decl: flags type_expr t_id .  [t_semi]
+   14 var_defn: flags type_expr t_id . t_assign expr
+
+    t_assign  сдвиг, и переход в состояние 72
+
+    $default  вывод с использованием правила 13 (var_decl)

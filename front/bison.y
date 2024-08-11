@@ -11,7 +11,7 @@ void yyerror(char const * msg, YYLTYPE loc)
 
 
 %}
-
+%token-table
 %locations
 
 %token t_screening
@@ -82,22 +82,35 @@ void yyerror(char const * msg, YYLTYPE loc)
 %token t_char
 %token t_string
 %token t_id
+%token t_notdefined
 %token t_tname
 %token t_num
 %token t_comm
 %token t_line
 
-%left erbexpr
-%right eassign
-%left eor
-%left eand
-%left eeq eneq
-%left esmaller ebigger eseq ebeq
-%left elshift ershift
-%left eplus eminus
-%left emult ediv emod
-%right enot euplus euminus egetaddr egoaddr
-%left emember eptrmember esqexpr ecall etypeof
+%token erbexpr
+%token eplus
+%token eminus
+%token emult
+%token ediv
+%token emod
+%token ecall
+%token eassign
+
+%left t_rbexpr
+%right t_assign
+%left t_or
+%left t_and
+%left t_eq t_neq
+%left t_smaller t_bigger t_seq t_beq
+%left t_lshift t_rshift
+
+%left t_plus t_minus
+%left t_mult t_div t_mod
+
+
+%right t_not euplus euminus egetaddr egoaddr
+%left t_member t_ptrmember esqexpr ecall etypeof
 
 
 %%
@@ -111,6 +124,7 @@ commands: /* empty */
                 else yyerror("unknown pashalka", @3);
             }
         | commands t_comm
+        | error t_semi
         ;
 
 type_expr: t_rb_o type_expr t_rb_c { $$ = $2; }
@@ -182,10 +196,14 @@ fun_args: expr                  { $$ = newnode(args, ({copy(&$1)})); }
         | t_void                { $$ = newnode(args, ({})); }
         ;
 
-aid: t_id { $$ = $1; }
-   | t_tname { $$ = $1; }
+aid: t_id       { $$ = $1; }
+   | t_tname    { $$ = $1; }
 
-asm: t_spec aid fun_args { $$ = newnode(ac, ( *$2.id, *$3.args ))}
+asm: t_lshift aid fun_args       { $$ = newnode(ac, ( *$2.id, *$3.args ))}
+   | t_asm t_fb_o
+   ;
+
+asmcom: aid fun_args       { $$ = newnode(ac, ( *$1.id, *$2.args )) }
 
 bodycom: var_decl t_semi            { $$ = $1; }
        | var_defn t_semi            { $$ = $1; }
@@ -194,16 +212,17 @@ bodycom: var_decl t_semi            { $$ = $1; }
        | expr t_semi                { $$ = $1; }
        | asm t_semi                 { $$ = $1; }
        | error t_semi               { yyerror("invalid expression"); $$ = *null; }
+
        ;
 
-expr: t_rb_o expr t_rb_c                %prec erbexpr   { $$ = $2; }
-    | expr t_plus expr                  %prec eplus     { $$ = newnode(plus, (copy(&$1), copy(&$3))); }
-    | expr t_minus expr                 %prec eminus    { $$ = newnode(minus, (copy(&$1), copy(&$3))); }
-    | expr t_mult expr                  %prec emult     { $$ = newnode(mult, (copy(&$1), copy(&$3))); }
-    | expr t_div expr                   %prec ediv      { $$ = newnode(div, (copy(&$1), copy(&$3))); }
-    | expr t_mod expr                   %prec emod      { $$ = newnode(mod, (copy(&$1), copy(&$3))); }
-    | expr t_rb_o fun_args t_rb_c       %prec ecall     { stop(vector({$1, $2, $3, $4})); $$ = newnode(call, (copy(&$1), {}));}
-    | expr t_assign expr                %prec eassign   { $$ = newnode(assign, (copy(&$1), copy(&$3))); }
+expr: t_rb_o expr t_rb_c                { $$ = $2; }
+    | expr t_plus expr                  { $$ = newnode(plus, (copy(&$1), copy(&$3))); }
+    | expr t_minus expr                 { $$ = newnode(minus, (copy(&$1), copy(&$3))); }
+    | expr t_mult expr                  { $$ = newnode(mult, (copy(&$1), copy(&$3))); }
+    | expr t_div expr                   { $$ = newnode(div, (copy(&$1), copy(&$3))); }
+    | expr t_mod expr                   { $$ = newnode(mod, (copy(&$1), copy(&$3))); }
+    | expr t_rb_o fun_args t_rb_c       { stop(vector({$1, $2, $3, $4})); $$ = newnode(call, (copy(&$1), {}));}
+    | expr t_assign expr                { $$ = newnode(assign, (copy(&$1), copy(&$3))); }
     | t_num                                             { $$ = $1; }
     | t_id                                              { $$ = $1; }
     | error                                             { yyerror("invalid expression"); $$ = *null; }

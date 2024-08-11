@@ -1,5 +1,6 @@
 Terminals unused in grammar
 
+   m_builtin
    m_ifdef
    m_ifndef
    m_else
@@ -15,9 +16,9 @@ Terminals unused in grammar
     0 $accept: commands $end
 
     1 commands: /* пусто */
-    2         | commands m_define m_id body m_newline
-    3         | commands m_include m_libname m_newline
-    4         | commands m_include m_string m_newline
+    2         | commands m_sharp m_define m_id body m_newline
+    3         | commands m_sharp m_include m_libname m_newline
+    4         | commands m_sharp m_include m_string m_newline
     5         | commands m_id
 
     6 body: /* пусто */
@@ -31,25 +32,27 @@ m_newline (258) 2 3 4
 m_define (259) 2
 m_libname (260) 3
 m_include (261) 3 4
-m_ifdef (262)
-m_ifndef (263)
-m_else (264)
-m_endif (265)
-m_rb_o (266)
-m_rb_c (267)
-m_char (268)
-m_string (269) 4
-m_id (270) 2 5
-m_num (271)
+m_builtin (262)
+m_ifdef (263)
+m_ifndef (264)
+m_else (265)
+m_endif (266)
+m_rb_o (267)
+m_rb_c (268)
+m_char (269)
+m_string (270) 4
+m_id (271) 2 5
+m_num (272)
+m_sharp (273) 2 3 4
 
 
 Нетерминальные символы с правилами, в которых они появляются
 
-$accept (17)
+$accept (19)
     налево: 0
-commands (18)
+commands (20)
     налево: 1 2 3 4 5, направо: 0 2 3 4 5
-body (19)
+body (21)
     налево: 6, направо: 2
 
 
@@ -57,9 +60,9 @@ body (19)
 
     0 $accept: . commands $end
     1 commands: .
-    2         | . commands m_define m_id body m_newline
-    3         | . commands m_include m_libname m_newline
-    4         | . commands m_include m_string m_newline
+    2         | . commands m_sharp m_define m_id body m_newline
+    3         | . commands m_sharp m_include m_libname m_newline
+    4         | . commands m_sharp m_include m_string m_newline
     5         | . commands m_id
 
     $default  вывод с использованием правила 1 (commands)
@@ -70,15 +73,14 @@ body (19)
 состояние 1
 
     0 $accept: commands . $end
-    2 commands: commands . m_define m_id body m_newline
-    3         | commands . m_include m_libname m_newline
-    4         | commands . m_include m_string m_newline
+    2 commands: commands . m_sharp m_define m_id body m_newline
+    3         | commands . m_sharp m_include m_libname m_newline
+    4         | commands . m_sharp m_include m_string m_newline
     5         | commands . m_id
 
-    $end       сдвиг, и переход в состояние 2
-    m_define   сдвиг, и переход в состояние 3
-    m_include  сдвиг, и переход в состояние 4
-    m_id       сдвиг, и переход в состояние 5
+    $end     сдвиг, и переход в состояние 2
+    m_id     сдвиг, и переход в состояние 3
+    m_sharp  сдвиг, и переход в состояние 4
 
 
 состояние 2
@@ -90,74 +92,84 @@ body (19)
 
 состояние 3
 
-    2 commands: commands m_define . m_id body m_newline
-
-    m_id  сдвиг, и переход в состояние 6
-
-
-состояние 4
-
-    3 commands: commands m_include . m_libname m_newline
-    4         | commands m_include . m_string m_newline
-
-    m_libname  сдвиг, и переход в состояние 7
-    m_string   сдвиг, и переход в состояние 8
-
-
-состояние 5
-
     5 commands: commands m_id .
 
     $default  вывод с использованием правила 5 (commands)
 
 
+состояние 4
+
+    2 commands: commands m_sharp . m_define m_id body m_newline
+    3         | commands m_sharp . m_include m_libname m_newline
+    4         | commands m_sharp . m_include m_string m_newline
+
+    m_define   сдвиг, и переход в состояние 5
+    m_include  сдвиг, и переход в состояние 6
+
+
+состояние 5
+
+    2 commands: commands m_sharp m_define . m_id body m_newline
+
+    m_id  сдвиг, и переход в состояние 7
+
+
 состояние 6
 
-    2 commands: commands m_define m_id . body m_newline
-    6 body: .
+    3 commands: commands m_sharp m_include . m_libname m_newline
+    4         | commands m_sharp m_include . m_string m_newline
 
-    $default  вывод с использованием правила 6 (body)
-
-    body  переход в состояние 9
+    m_libname  сдвиг, и переход в состояние 8
+    m_string   сдвиг, и переход в состояние 9
 
 
 состояние 7
 
-    3 commands: commands m_include m_libname . m_newline
+    2 commands: commands m_sharp m_define m_id . body m_newline
+    6 body: .
 
-    m_newline  сдвиг, и переход в состояние 10
+    $default  вывод с использованием правила 6 (body)
+
+    body  переход в состояние 10
 
 
 состояние 8
 
-    4 commands: commands m_include m_string . m_newline
+    3 commands: commands m_sharp m_include m_libname . m_newline
 
     m_newline  сдвиг, и переход в состояние 11
 
 
 состояние 9
 
-    2 commands: commands m_define m_id body . m_newline
+    4 commands: commands m_sharp m_include m_string . m_newline
 
     m_newline  сдвиг, и переход в состояние 12
 
 
 состояние 10
 
-    3 commands: commands m_include m_libname m_newline .
+    2 commands: commands m_sharp m_define m_id body . m_newline
 
-    $default  вывод с использованием правила 3 (commands)
+    m_newline  сдвиг, и переход в состояние 13
 
 
 состояние 11
 
-    4 commands: commands m_include m_string m_newline .
+    3 commands: commands m_sharp m_include m_libname m_newline .
 
-    $default  вывод с использованием правила 4 (commands)
+    $default  вывод с использованием правила 3 (commands)
 
 
 состояние 12
 
-    2 commands: commands m_define m_id body m_newline .
+    4 commands: commands m_sharp m_include m_string m_newline .
+
+    $default  вывод с использованием правила 4 (commands)
+
+
+состояние 13
+
+    2 commands: commands m_sharp m_define m_id body m_newline .
 
     $default  вывод с использованием правила 2 (commands)

@@ -38,9 +38,9 @@ typeof                  { return t_gettype; }
 
 joker                   { return t_meme; }
 
-reserve                 { return t_reserve; }
-noreserve               { return t_noreserve; }
-fast                    { return t_fast; }
+data                    { return t_reserve; }
+bs                      { return t_noreserve; }
+register                { return t_fast; }
 stack                   { return t_stack; }
 locate                  { return t_locate; }
 immortal                { return t_immortal; }
@@ -84,7 +84,7 @@ asm                     { return t_asm; }
 "<="                    { return t_seq; }
 ">>"                    { return t_lshift; }
 "<<"                    { return t_rshift; }
-"$"|"\\"|"@"            { return t_spec; }
+"$"                     { return t_spec; }
 
 "..."                   { return t_any; }
 "::"                    { return t_nsget; }

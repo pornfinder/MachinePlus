@@ -5,6 +5,7 @@
 using namespace std;
 
 class assembler {
+public:
     struct instype{string com; vector<string> ops; bool islabel = false;};
 
     struct valsizepair {string val; int size;};
@@ -18,16 +19,16 @@ class assembler {
     };
 
 
-public:
+
     vector<instype> ins{};
     enum bits {b8, b16, b32, b64};
-    enum regs {_temp, _tempb, _stack, _auto};
+    enum regs {a_temp, b_temp, c_temp, d_temp, _stack, _auto};
 
     bits b;
 
     static string getreg(regs type, bits bit) {
         switch (type) {
-            case _temp: {
+            case a_temp: {
                 switch (bit) {
                     case b8:
                         return "al";
@@ -39,7 +40,7 @@ public:
                         return "rax";
                 }
             }
-            case _tempb: {
+            case b_temp: {
                 switch (bit) {
                     case b8:
                         return "bl";
@@ -49,6 +50,30 @@ public:
                         return "ebx";
                     case b64:
                         return "rbx";
+                }
+            }
+            case c_temp: {
+                switch (bit) {
+                    case b8:
+                        return "cl";
+                    case b16:
+                        return "cx";
+                    case b32:
+                        return "ecx";
+                    case b64:
+                        return "rcx";
+                }
+            }
+            case d_temp: {
+                switch (bit) {
+                    case b8:
+                        return "dl";
+                    case b16:
+                        return "dx";
+                    case b32:
+                        return "edx";
+                    case b64:
+                        return "rdx";
                 }
             }
             case _stack: {
@@ -80,7 +105,7 @@ public:
 
 
     void stack(const string& name, int size) {
-        vars[name] = {string{"["} + (prefix == ' ' ? string{""} : string{prefix}) + "sp" + '-' + to_string(size+varstack) + ']', size};
+        vars[name] = {string{"["} + (prefix == ' ' ? string{""} : string{prefix}) + "bp" + '-' + to_string(size+varstack) + ']', size};
         varstack += size;
     }
 
@@ -145,7 +170,18 @@ public:
             for (string ii : i.ops) temp += ii + (ii == i.ops.back() ? "" : ", ");
             res += (i.islabel ? "" : "    ") + i.com + ' ' + temp + '\n';
         }
-        return res;
+        /*
+         * format PE console
+entry main
+use32
+
+; ========== CODE SECTION ==========
+section '.text' code readable executable
+         */
+        return "format PE console\nentry main\nsection '.text' executable\nuse"s+to_string(getint(b)*8)+R"(
+
+
+)"+res+"    ret";
     }
 
     bool getvar(string var, string& res) {
@@ -165,18 +201,18 @@ public:
     }
 
     void binary(string dest, string src, string op, bool revertlast = false) {
-        if (dest == "-a*") dest = getreg(_temp, getbit(vars[src].size));
-        else if (src == "-a*") src = getreg(_temp, getbit(vars[dest].size));
-        else if (dest == "-b*") dest = getreg(_tempb, getbit(vars[src].size));
-        else if (src == "-b*") src = getreg(_tempb, getbit(vars[dest].size));
-        //
+        if (dest == "-a*") dest = getreg(a_temp, getbit(vars[src].size));
+        else if (src == "-a*") src = getreg(a_temp, getbit(vars[dest].size));
+        else if (dest == "-b*") dest = getreg(b_temp, getbit(vars[src].size));
+        else if (src == "-b*") src = getreg(b_temp, getbit(vars[dest].size));
+
         string sa, sb;
         bool a = getvar(dest, sa), b = getvar(src, sb);
         if(sa == sb) return;
         if (a&&b) {
-            addnew(align("mov"), {getreg(_temp, getbit(vars[src].size)), sb});
-            if (!revertlast) addnew(align(op), {sa, getreg(_temp, getbit(vars[src].size))});
-            else addnew(align(op), {getreg(_temp, getbit(vars[src].size)), sa});
+            addnew(align("mov"), {getreg(a_temp, getbit(vars[src].size)), sb});
+            if (!revertlast) addnew(align(op), {sa, getreg(a_temp, getbit(vars[src].size))});
+            else addnew(align(op), {getreg(a_temp, getbit(vars[src].size)), sa});
         }
         else {
             addnew(align(op), {sa, sb});
@@ -189,7 +225,6 @@ public:
     }
 
     void add(string dest, string src) {
-
         binary(dest, src, "add", true);
     }
 
@@ -226,11 +261,6 @@ int main() {
     cout << test.tostring();
 }
 
-/*
- *
- *rax - 64bit - 8byte
- *eax - 32bit - 4byte
- *
- */
+
 
 #endif

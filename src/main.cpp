@@ -10,7 +10,7 @@
 
 #define asts vector<node>
 
-struct s_braces;
+struct s_acs;
 struct s_ac;
 struct s_call;
 struct s_args;
@@ -48,6 +48,8 @@ string code = "";
 #define YYSTYPE node
 struct node;
 #include "grammar.h"
+#include "prepgram.h"
+
 
 map<string, node> objects = {};
 
@@ -86,6 +88,7 @@ enum comtype {
     _args,
     _call,
     _ac,
+    _acs,
     _braces,
     _null
 };
@@ -123,7 +126,7 @@ struct node {
         s_call *call;
 
         s_ac *ac;
-        s_braces *braces;
+        s_acs *acs;
     };
 };
 
@@ -141,50 +144,28 @@ struct flag {
 };
 
 NODE(flags, vector<s_flag*> flags;);
-
 NODE(flag, flag flag;);
-
 NODE(num, string value;);
-
 NODE(id, string value;);
-
 NODE(plus, elem a; elem b;);
-
 NODE(minus, elem a; elem b;);
-
 NODE(mult, elem a; elem b;);
-
 NODE(div, elem a; elem b;);
-
 NODE(mod, elem a; elem b;);
-
 NODE(fun_args, vector<s_var_decl*> args;);
-
 NODE(args, vector<elem> args;);
-
 NODE(call, elem func; s_args args;);
-
 NODE(body, vector<node> body;);
-
-
 NODE(fun_decl, s_flags flags; elem rettype; s_id name; s_fun_args params;);
-
 NODE(fun_defn, s_flags flags; elem rettype; s_id name; s_fun_args params; s_body body;);
-
 NODE(var_decl, s_flags flags; elem vartype; s_id name;);
-
 NODE(var_defn, s_flags flags; elem vartype; s_id name; elem value;);
-
 NODE(gettype, elem value;);
-
 NODE(assign, elem a; elem b;);
-
 NODE(ret, elem expr;);
-
 NODE(pos, s_id id = {}; bool isprev = false; bool instart = false; bool inend = false;);
-
 NODE(ac, s_id com; s_args args;);
-
+NODE(acs, string coms; );
 NODE(braces, UNPACK(enum{round, square, figure} type; elem e; ));
 
 template<typename T = int>
@@ -209,9 +190,13 @@ vector<string> tnames = {
 };
 
 #include "lexer.c"
+#include "prep.cpp"
+
 
 asts c = {};
-#include "grammar.c"
+
+#include "grammar.cpp"
+#include "prepgram.cpp"
 
 
 using namespace std;
@@ -230,6 +215,7 @@ bool havefile = false;
 ofstream out("test.asm");
 
 struct expr {
+    YYLTYPE loc = {};
     string op;
     vector<string> opers;
     comtype type;
@@ -272,16 +258,23 @@ string execTree(node tree) {
         default: ;
     }
     cs[nodename()];
+    t = {.loc = tree.loc};
     switch (tree.type) {
-        case _plus: t = {"+"};
+        case _plus:
+            t.op = {"+"};
             goto binary;
-        case _minus: t = {"-"};
+        case _minus:
+            t.op = {"-"};
             goto binary;
-        case _mult: t = {"*"};
+        case _mult:
+            t.op = {"*"};
             goto binary;
-        case _div: t = {"/"};
+        case _div:
+            t.op = {"/"};
             goto binary;
-        case _mod: t = {"%"}; {
+        case _mod:
+            t.op = {"%"};
+            {
             binary:
                 auto temp = tree.plus;
                 t.opers = {execTree(*temp->a), execTree(*temp->b)};
@@ -291,7 +284,8 @@ string execTree(node tree) {
             break;
         case _fun_defn: {
             auto temp = tree.fun_defn;
-            t = {temp->name.value, .islabel = true};
+            t.op = temp->name.value;
+            t.islabel = true;
             execTree(node{_body, tree.loc, .body = &temp->body});
         }
         break;
@@ -301,7 +295,7 @@ string execTree(node tree) {
             break;
         case _var_defn: {
             auto temp = tree.var_defn;
-            t = {
+            t.op = {
                 [temp] -> string {
                     for (auto i: temp->flags.flags) {
                         switch (i->flag.type) {
@@ -322,9 +316,9 @@ string execTree(node tree) {
                         }
                     }
                     return {};
-                }(),
-                {execTree(*temp->vartype), execTree(*temp->value)}
-            };
+                    }()};
+            t.opers = {execTree(*temp->vartype), execTree(*temp->value)};
+
         }
         break;
         case _body: {
@@ -339,10 +333,15 @@ string execTree(node tree) {
             break;
         case _assign: {
             auto temp = tree.assign;
-            t = {"=", {execTree(*temp->a), execTree(*temp->b)}};
+            t.op = {"="};
+            t.opers = {execTree(*temp->a), execTree(*temp->b)};
         }
         break;
-        case _ret:
+        case _ret: {
+            auto temp = tree.ret;
+            t.op = {"return"};
+            t.opers = {execTree(*temp->expr)};
+        }
             break;
         case _flags:
             break;
@@ -357,9 +356,9 @@ string execTree(node tree) {
         case _null:
             break;
         case _ac: {
-            auto temp = tree.ac;
-            t = {
-                temp->com.value, {
+            auto temp= tree.ac;
+            t.op = temp->com.value;
+            t.opers = {
                     [=] {
                         vector<string> res;
                         for (auto i: temp->args.args) {
@@ -367,7 +366,6 @@ string execTree(node tree) {
                         }
                         return res;
                     }()
-                }
             };
         }
         break;
@@ -382,68 +380,256 @@ constexpr long hashh(const char *str, uint32_t h = 2166136261UL) {
 
 map<string, assembler> ans{};
 
+map<string, string> d{};
+
+assembler::bits getbits() {
+    if (b16) return assembler::b16;
+    if (b32) return assembler::b32;
+    if (b64) return assembler::b64;
+    throw;
+}
+
+assembler res = {getbits()};
+
+#define ax res.prefix+"ax"s
+#define bx res.prefix+"bx"s
+#define cx res.prefix+"cx"s
+#define dx res.prefix+"dx"s
+
+struct btype {
+    bool a;
+    bool b;
+    bool c;
+    bool d;
+};
+
+pair<assembler, string> btoasmrec(string f, expr s, btype b) {
+    assembler res(getbits());
+    auto getreg{[&](assembler::bits regs) {
+        return assembler::getreg([&] -> assembler::regs {
+            if (b.a) {
+                if (b.b) {
+                    if (b.c) {
+                        if (!b.d) return assembler::d_temp;
+                    } else return assembler::c_temp;
+                } else return assembler::b_temp;
+            } else return assembler::a_temp;
+            error("expression error; please contact me", s.loc);
+            throw;
+        }(), regs);
+    }};
 
 
-pair<assembler, string> toasmrec(string f, expr s, assembler res) {
-    static bool b = false;
-
-    auto getreg{[&](assembler::bits regs) { return assembler::getreg(static_cast<assembler::regs>(b), regs); }};
-
-    static map<string, string> d{};
-
-    auto reg = getreg(assembler::b64);
-    d[f] = reg;
 
     auto getaddr{
         [&](string u) {
             string r;
             if (res.getvar(u, r)) return r;
-            return d[u] == "" ? move(u) : d[u];
+            return d.find(u) == d.end() ? move(u) : d[u];
         }
     };
-
+    auto reg = getreg(res.b);
+    d[f] = reg;
     vector<assembler> rr{};
+    typeof(b) nb = {
+            .a = reg == ax,
+            .b = reg == bx,
+            .c = reg == cx,
+            .d = reg == dx
+    };
+
 
     for (auto& i: s.opers) {
         if (i[0] == '-' && i[1] == 'r') {
-            pair<assembler, string> ar = toasmrec(i, cs[i], assembler(res.b));
+            pair<assembler, string> ar = btoasmrec(i, cs[i], b);
             cs.erase(i);
             i = ar.second;
+            b = {
+                    .a = i == ax,
+                    .b = i == bx,
+                    .c = i == cx,
+                    .d = i == dx
+            };
             rr.push_back(ar.first);
+#define CHECK(a) if (i == "r"#a"x") return b.a
+
+            [&] -> bool & {
+                CHECK(a);
+                CHECK(b);
+                CHECK(c);
+                CHECK(d);
+                error("expression error; please contact me", s.loc);
+                throw;
+            }() = true;
         }
     }
 
-    sort(rr.begin(), rr.end(), [](assembler a, assembler b){return a.ins.size() > b.ins.size();});
-
-    for (auto i : rr) {
+    for (auto i: [&] {
+        sort(rr.begin(), rr.end(), [](assembler a, assembler b) {
+            return a.ins.size() > b.ins.size();
+        });
+        return rr;
+    }())
         res.addnew(i);
-    }
-#define B_OP(op)  res.mov(reg, getaddr(s.opers[0])); res.op(reg, getaddr(s.opers[1])); b = !b; break;
+
     switch (hashh(s.op.c_str())) {
-        case hashh("+"): B_OP(add)
-        case hashh("-"): B_OP(sub)
-        case hashh("*"): B_OP(imul)
-        case hashh("/"): B_OP(idiv)
-        case hashh("new"): B_OP(add)
+        case hashh("+"): {
+            res.mov(reg, getaddr(s.opers[0]));
+            res.add(reg, getaddr(s.opers[1]));
+
+            break;
+        }
+        case hashh("-"): {
+            res.mov(reg, getaddr(s.opers[0]));
+            res.sub(reg, getaddr(s.opers[1]));
+
+            break;
+        }
+        case hashh("*"): {
+            res.mov(reg, getaddr(s.opers[0]));
+            res.imul(reg, getaddr(s.opers[1]));
+
+            break;
+        }
+        case hashh("/"): {
+            res.mov(reg, getaddr(s.opers[0]));
+            res.idiv(reg, getaddr(s.opers[1]));
+
+            break;
+        }
+        case hashh("new"): {
+            res.mov(reg, getaddr(s.opers[0]));
+            res.add(reg, getaddr(s.opers[1]));
+
+            break;
+        }
         default: {
+            if (s.op == "")
+                //error("this operation is not yet available", s.loc);
             if (s.islabel) res.label(s.op);
             else res.addauto(s.op, s.opers);
         }
     }
-    res.addnew("");
+
+
+    //res.addnew("");
+    return {res, reg};
+}
+
+pair<assembler, string> toasmrec(string f, expr s, btype b) {
+    assembler res(getbits());
+    vector<assembler> rr = {};
+
+    for (auto &i: s.opers) {
+        if (i[0] == '-' && i[1] == 'r') {
+            pair<assembler, string> ar = toasmrec(i, cs[i], b);
+            cs.erase(i);
+            i = ar.second;
+            b = {
+                    .a = i == ax || b.a,
+                    .b = i == bx || b.b,
+                    .c = i == cx || b.c,
+                    .d = i == dx || b.d
+            };
+            rr.push_back(ar.first);
+        }
+    }
+    if (b.a&&b.b&&b.c&&b.d) error("expression error; contact me", s.loc);
+    for (auto i: [&] {
+        sort(rr.begin(), rr.end(), [](assembler a, assembler b) {
+            return a.ins.size() < b.ins.size();
+        });
+        return rr;
+    }())
+        res.addnew(i);
+
+
+    //всё что я понимаю это свич, кейс и брэйк
+    //бываит
+    auto getaddr{
+        [&](string u) {
+            string r;
+            if (res.getvar(u, r)) return r;
+            return d.find(u) == d.end() ? move(u) : d[u];
+        }
+    };
+    auto getreg{[&](assembler::bits regs) {
+        return assembler::getreg([&] -> assembler::regs {
+            if (b.a) {
+                if (b.b) {
+                    if (b.c) {
+                        if (!b.d) return assembler::d_temp;
+                    } else return assembler::c_temp;
+                } else return assembler::b_temp;
+            } else return assembler::a_temp;
+            error("expression error; please contact me", s.loc);
+            throw;
+        }(), regs);
+    }};
+    auto isreg{[&](string r){
+        return r==ax||r==bx||r==cx||r==dx;
+    }};
+    for(auto i : s.opers) {
+        if(isreg(i)) {
+            [&] -> bool& {
+                if(i == ax) return b.a;
+                if(i == bx) return b.b;
+                if(i == cx) return b.c;
+                if(i == dx) return b.d;
+            }() = false;
+        }
+    }
+    auto reg = getreg(res.b);
+
+    switch (hashh(s.op.c_str())) {
+        case hashh("+"): {
+            res.mov(reg, getaddr(s.opers[0]));
+            res.add(reg, getaddr(s.opers[1]));
+
+            break;
+        }
+        case hashh("-"): {
+            res.mov(reg, getaddr(s.opers[0]));
+            res.sub(reg, getaddr(s.opers[1]));
+
+            break;
+        }
+        case hashh("*"): {
+            res.mov(reg, getaddr(s.opers[0]));
+            res.imul(reg, getaddr(s.opers[1]));
+
+            break;
+        }
+        case hashh("/"): {
+            res.mov(reg, getaddr(s.opers[0]));
+            res.idiv(reg, getaddr(s.opers[1]));
+
+            break;
+        }
+        case hashh("return"): {
+            res.mov(reg, getaddr(s.opers[0]));
+
+            break;
+        }
+
+        default: {
+            if (s.op == "") {
+
+            }
+            if (s.islabel) res.label(s.op);
+            else res.addauto(s.op, s.opers);
+        }
+    }
 
     return {res, reg};
 }
 
 assembler toasm() {
-    static assembler res([] {
-        if (b16) return assembler::b16;
-        if (b32) return assembler::b32;
-        if (b64) return assembler::b64;
-        throw;
-    }());
+
+
     for (auto i: cs) {
-        res.addnew(toasmrec(i.first, i.second, res).first);
+        res.addnew(toasmrec(i.first, i.second, {}).first);
+        d.clear();
     }
     return res;
 }
@@ -469,10 +655,14 @@ int main(int argc, char **argv) {
         fprintf(stderr, "First parameter <file> is missing.");
         exit(1);
     }
+    res.b = getbits();
     ifstream file(filename);
     char ch;
 
     while (file.get(ch)) code += ch;
+
+
+
 
     //yy_switch_to_buffer();
     yy_switch_to_buffer(yy_scan_string(code.c_str()));
@@ -482,6 +672,7 @@ int main(int argc, char **argv) {
     // yy_switch_to_buffer(yy_scan_string(e.c_str()));
     //printf("Hello, World!\n");
     yyparse();
+
     if (haveerror) exit(1);
     for (auto i: c)
         execTree(i); //пашел нахюй printf тупой; cout лучше
@@ -498,22 +689,14 @@ int main(int argc, char **argv) {
         else cout << i->first << " = " << i->second.op << " " << i->second.opers[0];
     }
 
-
-    /*
-     * -r1 = 9 + 9
-     * -r2 = 29 + -r1
-     * var = -r2
-     *
-     * xor rax, rax
-     * xor rbx, rbx
-     *
-     * mov rax, 9
-     * add rax, 9
-     *
-     *
-     *
-     */
-
-
-    cout << toasm().tostring();
+    [&](assembler gg) {
+        class {
+        public:
+            void operator>>(assembler pp) {
+                out << pp.tostring();
+                cout << pp.tostring();
+            }
+        } k;
+        k >> gg;
+    }(toasm());
 }

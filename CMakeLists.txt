@@ -4,4 +4,5 @@ project(mp_c C)
 set(CMAKE_C_STANDARD 23)
 
 add_executable(mp_c src/main.cpp
-        src/res.c)
+        src/res.c
+        src/preproc.cpp)

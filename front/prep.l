@@ -1,10 +1,9 @@
 %option nounput
 %option noinput
 %option noyywrap
-%option outfile="src/preplex.c"
-
+%option outfile="src/prep.cpp"
+%option prefix="pp"
 %{
-#include "res.c"
 #define YY_USER_ACTION { incrColumn(yyleng); }
 %}
 
@@ -17,15 +16,14 @@ nv [^a-zA-Z_0-9+\-*/><!;,=(){}\[\]&|'" \n\t]
 
 \n                      { dropColumn(); incrLine(1); return m_newline; }
 
-"#define"               { return m_define; }
-"#include"              { return m_include; }
-"#ifdef"                { return m_ifdef; }
-"#ifndef"               { return m_ifndef; }
-"#else"                 { return m_else; }
-"#endif"                { return m_endif; }
-
-"("                     { return m_rb_o; }
-")"                     { return m_rb_c; }
+"#"                    { return m_sharp; }
+"define"               { return m_define; }
+"include"              { return m_include; }
+"builtin"              { return m_builtin; }
+"ifdef"                { return m_ifdef; }
+"ifndef"               { return m_ifndef; }
+"else"                 { return m_else; }
+"endif"                { return m_endif; }
 
  /* Обработка нормального хода программы */
 \'.\'                   { return m_char; }
