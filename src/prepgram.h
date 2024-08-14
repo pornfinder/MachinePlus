@@ -54,7 +54,8 @@
      m_string = 270,
      m_id = 271,
      m_num = 272,
-     m_sharp = 273
+     m_sharp = 273,
+     m_n = 274
    };
 #endif
 
@@ -67,7 +68,7 @@ typedef int YYSTYPE;
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
-extern YYSTYPE pplval;
+extern YYSTYPE yylval;
 
 #if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
 typedef struct YYLTYPE
@@ -82,5 +83,5 @@ typedef struct YYLTYPE
 # define YYLTYPE_IS_TRIVIAL 1
 #endif
 
-extern YYLTYPE pplloc;
+extern YYLTYPE yylloc;
 

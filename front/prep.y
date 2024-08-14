@@ -2,11 +2,11 @@
 
 void yyerror(char const * msg)
 {
-    error(string{msg}, yylloc);
+    //error(string{msg}, yylloc);
 }
 void yyerror(char const * msg, YYLTYPE loc)
 {
-    error(string{msg}, loc);
+    //error(string{msg}, loc);
 }
 
 struct define{
@@ -42,13 +42,10 @@ vector<macros> macs;
 %token m_id
 %token m_num
 %token m_sharp
+%token m_n
 
 %%
 commands:
-        | commands m_sharp m_define m_id body m_newline
-        {
-            //defs.push_back();
-        }
         | commands m_sharp m_include m_libname m_newline
         {
 
@@ -57,6 +54,10 @@ commands:
         {
 
         }
+        | commands m_sharp m_builtin m_libname m_newline
+        {
+           code.replace(@2.first_column-1, @4.last_column - @2.first_column, builtins[$4]);
+        }
         | commands m_id
         {
             /*if ( std::find(defs.begin(), defs.end(), $2) != defs.end() )
@@ -64,8 +65,7 @@ commands:
             else
                ;*/
         }
+        | commands error {}
         ;
-
-body: {}
 
 %%

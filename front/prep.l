@@ -2,19 +2,25 @@
 %option noinput
 %option noyywrap
 %option outfile="src/prep.cpp"
-%option prefix="pp"
+
 %{
-#define YY_USER_ACTION { incrColumn(yyleng); }
+
+#define YY_USER_ACTION \
+    yylloc.first_column = yylloc.last_column; \
+    for(int i = 0; yytext[i] != '\0'; i++) { \
+            yylloc.last_column++; \
+    }
 %}
 
 id [a-zA-Z_][a-zA-Z0-9_]*
 num [0-9]+
-none \s*
-nv [^a-zA-Z_0-9+\-*/><!;,=(){}\[\]&|'" \n\t]
 
 %%
+[ \t\r]+               { }
 
-\n                      { dropColumn(); incrLine(1); return m_newline; }
+("//".*\n)|("/*"(.|\n)*"*/") { }
+
+\n                     { return m_newline; }
 
 "#"                    { return m_sharp; }
 "define"               { return m_define; }
@@ -25,14 +31,9 @@ nv [^a-zA-Z_0-9+\-*/><!;,=(){}\[\]&|'" \n\t]
 "else"                 { return m_else; }
 "endif"                { return m_endif; }
 
- /* Обработка нормального хода программы */
-\'.\'                   { return m_char; }
-\".*\"                  { return m_string; }
-{id}                    { return m_id; }
-{num}                   { return m_num; }
+{id}                    { yylval = yytext; return m_id; }
+{num}                   { yylval = yytext; return m_num; }
 
-"<".*">"                { return m_libname; }
-
-{nv} {error("Unknown symbol", yytext, Position);}
-
+"<".*">"                { yylval = yytext; return m_libname; }
+.                 { return m_n; }
 %%

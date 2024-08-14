@@ -1,3 +1,0 @@
-C:/_1A Common/CProjects/machineplus/mp c/cmake-build-debug/CMakeFiles/mp_c.dir
-C:/_1A Common/CProjects/machineplus/mp c/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/_1A Common/CProjects/machineplus/mp c/cmake-build-debug/CMakeFiles/rebuild_cache.dir

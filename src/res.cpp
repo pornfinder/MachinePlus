@@ -1,5 +1,4 @@
-bool haveerror = false;
-
+vector<string> _split(string str, char separator = '\n');
 void error(string err, string file, YYLTYPE _pos) {
 
     string line = _split(code)[_pos.first_line-1].c_str();

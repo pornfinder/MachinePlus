@@ -24,8 +24,19 @@ mp main.mp --bpp
 ```commandline
 mp main.mp 
 ```
+
+## Preprocessing
+### #builtin \<package\> - Built-in small libraries. Used to determine the program type.
+* #### \<WinEF32B\> - Windows Executable Format 32 Bit
+* #### \<WinEF64B\> - Windows Executable Format 64 Bit
+* #### \<BiosRBF16B\> - Bios Raw Binary Format 16 Bit
+* #### \<BiosRBF32B\> - Bios Raw Binary Format 32 Bit
+* #### \<BiosRBF64B\> - Bios Raw Binary Format 64 Bit
+
+### #include \<file\> - Used to insert code from another file.
+
 ## Support
 |              | Windows | Ramphis | Mac os | Linux |
 |:-------------|:--------|:--------|:-------|:------|
-| **Compiler** | Yes     | No      | No     | No    |
-| **Out file** | Yes     | Yes     | No     | No    |   
+| **Compiler** | Yes  | No      | No     | No    |
+| **Program**  | Yes     | Yes     | No     | No    |   

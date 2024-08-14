@@ -42,13 +42,12 @@ using namespace std;
 
 string filename = "";
 
-vector<string> _split(string str, char separator = '\n');
+
 
 string code = "";
 #define YYSTYPE node
 struct node;
 #include "grammar.h"
-#include "prepgram.h"
 
 
 map<string, node> objects = {};
@@ -190,13 +189,12 @@ vector<string> tnames = {
 };
 
 #include "lexer.c"
-#include "prep.cpp"
+
 
 
 asts c = {};
 
 #include "grammar.cpp"
-#include "prepgram.cpp"
 
 
 using namespace std;
@@ -284,6 +282,7 @@ string execTree(node tree) {
             break;
         case _fun_defn: {
             auto temp = tree.fun_defn;
+            temp->body.body.push_back(newnode(ret, ()));
             t.op = temp->name.value;
             t.islabel = true;
             execTree(node{_body, tree.loc, .body = &temp->body});
@@ -673,7 +672,7 @@ int main(int argc, char **argv) {
     //printf("Hello, World!\n");
     yyparse();
 
-    if (haveerror) exit(1);
+
     for (auto i: c)
         execTree(i); //пашел нахюй printf тупой; cout лучше
 

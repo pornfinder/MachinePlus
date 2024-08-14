@@ -17,7 +17,7 @@
             yylloc.last_column++; \
         } \
     }
-#include "res.c"
+#include "res.cpp"
 %}
 %x COMMENT
 id [a-zA-Z_][a-zA-Z0-9_]*
@@ -100,7 +100,7 @@ asm                     { return t_asm; }
                           if (std::count(tnames.begin(), tnames.end(), string{yytext})) return t_tname; return t_id;}
 
 \\\X                    { return t_screening; }
-("//".*\n)|("/*"(.|\n)*"*/") { }
+
 
 "#line"                 { return t_line; }
 
