@@ -27,6 +27,7 @@ mp main.mp
 
 ## Preprocessing
 ### #builtin \<package\> - Built-in small libraries. Used to determine the program type.
+* #### \<WinEF16B\> - Windows Executable Format 16 Bit
 * #### \<WinEF32B\> - Windows Executable Format 32 Bit
 * #### \<WinEF64B\> - Windows Executable Format 64 Bit
 * #### \<BiosRBF16B\> - Bios Raw Binary Format 16 Bit
@@ -38,5 +39,5 @@ mp main.mp
 ## Support
 |              | Windows | Ramphis | Mac os | Linux |
 |:-------------|:--------|:--------|:-------|:------|
-| **Compiler** | Yes  | No      | No     | No    |
+| **Compiler** | Yes     | No      | No     | No    |
 | **Program**  | Yes     | Yes     | No     | No    |   

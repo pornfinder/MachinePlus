@@ -36,7 +36,11 @@ struct s_fun_args;
 struct s_var_decl;
 struct s_var_defn;
 
+struct s_bitmode;
+
 struct s_flags;
+
+struct s_struct;
 
 using namespace std;
 
@@ -88,13 +92,17 @@ enum comtype {
     _call,
     _ac,
     _acs,
-    _braces,
+    _bitmode,
+    _struct,
     _null
 };
 
 struct node {
     comtype type;
     YYLTYPE loc;
+    struct {
+        bool LInB;
+    } com = {};
 
     union {
         s_num *num;
@@ -126,6 +134,9 @@ struct node {
 
         s_ac *ac;
         s_acs *acs;
+
+        s_bitmode *bitmode;
+        s_struct *_struct
     };
 };
 
@@ -165,8 +176,8 @@ NODE(ret, elem expr;);
 NODE(pos, s_id id = {}; bool isprev = false; bool instart = false; bool inend = false;);
 NODE(ac, s_id com; s_args args;);
 NODE(acs, string coms; );
-NODE(braces, UNPACK(enum{round, square, figure} type; elem e; ));
-
+NODE(bitmode, int bits;);
+NODE(struct, type t;);
 template<typename T = int>
 T stop(T val = {}) {
     return val;
@@ -204,9 +215,7 @@ bool preponly = false;
 bool bin = false;
 bool s = false;
 bool bpp = false;
-bool b16 = false;
-bool b32 = false;
-bool b64 = true;
+assembler::bits b = assembler::b64;
 
 bool havefile = false;
 
@@ -236,10 +245,34 @@ assembler::bits getsize(string s) {
     if (s == "short") return assembler::b16;
     if (s == "int") return assembler::b32;
     if (s == "long") return assembler::b64;
-    throw;
+    throw "";
 }
 
+struct type {
+    map<string, type> values;
+    string name = "";
+
+    unsigned size = [&]() -> unsigned {
+        this->isbuiltin = [&]() -> bool{
+            try {
+                return getsize(this->name) + 1;
+            } catch(...) {
+                return false;
+            }
+        }();
+        if (!this->isbuiltin) {
+            for (auto i: this->values) {
+                this->size += i.second.size;
+            }
+            return this->size;
+        }
+        else return assembler::getint(getsize(name));
+    }();
+    bool isbuiltin;
+};
+
 string execTree(node tree) {
+
     setlocale(0, "");
 
     const function nodename = [] { return "-"s + "r" + to_string(cs.size()); };
@@ -282,7 +315,9 @@ string execTree(node tree) {
             break;
         case _fun_defn: {
             auto temp = tree.fun_defn;
+            temp->body.body.back().com.LInB = true;
             temp->body.body.push_back(newnode(ret, ()));
+            temp->body.body.back().com.LInB = true;
             t.op = temp->name.value;
             t.islabel = true;
             execTree(node{_body, tree.loc, .body = &temp->body});
@@ -314,8 +349,7 @@ string execTree(node tree) {
                                 return "stack";
                         }
                     }
-                    return {};
-                    }()};
+                    return "stack";}()};
             t.opers = {execTree(*temp->vartype), execTree(*temp->value)};
 
         }
@@ -323,6 +357,7 @@ string execTree(node tree) {
         case _body: {
             cs.erase(pre);
             auto temp = tree.body;
+            int ni = 0;
             for (node i: temp->body) {
                 execTree(i);
             }
@@ -335,11 +370,17 @@ string execTree(node tree) {
             t.op = {"="};
             t.opers = {execTree(*temp->a), execTree(*temp->b)};
         }
-        break;
+            break;
         case _ret: {
             auto temp = tree.ret;
-            t.op = {"return"};
-            t.opers = {execTree(*temp->expr)};
+            if (temp->expr != nullptr){
+                t.op = {tree.com.LInB ? "NRetPExpr" : "EReturn"};
+                t.opers = {execTree(*temp->expr)};
+                break;
+            }
+            t.op = {tree.com.LInB ? "ret" : ""};
+            t.opers = {};
+
         }
             break;
         case _flags:
@@ -367,9 +408,18 @@ string execTree(node tree) {
                     }()
             };
         }
-        break;
+            break;
+        case _acs: {
+            t.op = tree.acs->coms.substr(2);
+        }
+            break;
+        case _bitmode: {
+            t.op = "use" + to_string(tree.bitmode->bits);
+        }
+            break;
         default: ;
     }
+
     return pre;
 }
 
@@ -377,174 +427,183 @@ constexpr long hashh(const char *str, uint32_t h = 2166136261UL) {
     return *str ? hashh(str + 1, (h ^ *str) * 16777619ULL) : h;
 }
 
+struct type {
+    map<string, type> values;
+    bool isbuiltin;
+    string name = "";
+    const unsigned size = [&] -> unsigned {
+        if (!this->isbuiltin) for (auto i : this->values){}
+        else return assembler::getint(getsize(name));
+    }();
+};
+
 map<string, assembler> ans{};
 
 map<string, string> d{};
 
-assembler::bits getbits() {
-    if (b16) return assembler::b16;
-    if (b32) return assembler::b32;
-    if (b64) return assembler::b64;
-    throw;
-}
+assembler res = {b};
 
-assembler res = {getbits()};
+//pair<assembler, string> btoasmrec(string f, expr s, btype b) {
+//    assembler res(::b);
+//    vector<assembler> rr = {};
+//
+//    for (auto &i: s.opers) {
+//        if (i[0] == '-' && i[1] == 'r') {
+//            pair<assembler, string> ar = btoasmrec(i, cs[i], b);
+//            cs.erase(i);
+//            i = ar.second;
+//            b = {
+//                    .a = i == ax || b.a,
+//                    .b = i == bx || b.b,
+//                    .c = i == cx || b.c,
+//                    .d = i == dx || b.d
+//            };
+//            rr.push_back(ar.first);
+//        }
+//    }
+//    if (b.a&&b.b&&b.c&&b.d) error("expression error; contact me", s.loc);
+//    for (auto i: [&] {
+//        sort(rr.begin(), rr.end(), [](assembler a, assembler b) {
+//            return a.ins.size() < b.ins.size();
+//        });
+//        return rr;
+//    }())
+//        res.addnew(i);
+//
+//
+//    //всё что я понимаю это свич, кейс и брэйк
+//    //бываит
+//    auto getaddr{
+//            [&](string u) {
+//                string r;
+//                if (res.getvar(u, r)) return r;
+//                return d.find(u) == d.end() ? move(u) : d[u];
+//            }
+//    };
+//    auto getreg{[&](assembler::bits regs) {
+//        return assembler::getreg([&] -> assembler::regs {
+//            if (b.a) {
+//                if (b.b) {
+//                    if (b.c) {
+//                        if (!b.d) return assembler::d_temp;
+//                    } else return assembler::c_temp;
+//                } else return assembler::b_temp;
+//            } else return assembler::a_temp;
+//            error("expression error; please contact me", s.loc);
+//            throw;
+//        }(), regs);
+//    }};
+//    auto isreg{[&](string r){
+//        return r==ax||r==bx||r==cx||r==dx;
+//    }};
+//    for(auto i : s.opers) {
+//        if(isreg(i)) {
+//            [&] -> bool& {
+//                if(i == ax) return b.a;
+//                if(i == bx) return b.b;
+//                if(i == cx) return b.c;
+//                if(i == dx) return b.d;
+//            }() = false;
+//        }
+//    }
+//    auto reg = getreg(res.b);
+//
+//    switch (hashh(s.op.c_str())) {
+//        case hashh("+"): {
+//            res.mov(reg, getaddr(s.opers[0]));
+//            res.add(reg, getaddr(s.opers[1]));
+//
+//            break;
+//        }
+//        case hashh("-"): {
+//            res.mov(reg, getaddr(s.opers[0]));
+//            res.sub(reg, getaddr(s.opers[1]));
+//
+//            break;
+//        }
+//        case hashh("*"): {
+//            res.mov(reg, getaddr(s.opers[0]));
+//            res.imul(reg, getaddr(s.opers[1]));
+//
+//            break;
+//        }
+//        case hashh("/"): {
+//            res.mov(reg, getaddr(s.opers[0]));
+//            res.idiv(reg, getaddr(s.opers[1]));
+//
+//            break;
+//        }
+//        case hashh("EReturn"): {
+//            res.mov(getreg(::b), getaddr(s.opers[0]));
+//            res.addauto("ret", {});
+//            break;
+//        }
+//        case hashh("NRetPExpr"): {
+//            res.mov(getreg(::b), getaddr(s.opers[0]));
+//
+//            break;
+//        }
+//        case hashh("use16"): {
+//            res.addauto("use16", {});
+//            ::b = assembler::b16;
+//            break;
+//        }
+//        case hashh("use32"): {
+//            res.addauto("use32", {});
+//            ::b = assembler::b32;
+//            break;
+//        }
+//        case hashh("use64"): {
+//            res.addauto("use64", {});
+//            ::b = assembler::b64;
+//            break;
+//        }
+//
+//        default: {
+//            if (s.op == "") {
+//
+//            }
+//            if (s.islabel) res.label(s.op);
+//            else res.addauto(s.op, s.opers);
+//        }
+//    }
+//
+//    return {res, reg};
+//}
 
-#define ax res.prefix+"ax"s
-#define bx res.prefix+"bx"s
-#define cx res.prefix+"cx"s
-#define dx res.prefix+"dx"s
+typedef map<string, bool> btype;
 
-struct btype {
-    bool a;
-    bool b;
-    bool c;
-    bool d;
-};
+const string ax = res.getreg(assembler::a_temp, res.b > assembler::b32 ? assembler::b32 : res.b);
+const string bx = res.getreg(assembler::b_temp, res.b > assembler::b32 ? assembler::b32 : res.b);
+const string cx = res.getreg(assembler::c_temp, res.b > assembler::b32 ? assembler::b32 : res.b);
+const string dx = res.getreg(assembler::d_temp, res.b > assembler::b32 ? assembler::b32 : res.b);
 
-pair<assembler, string> btoasmrec(string f, expr s, btype b) {
-    assembler res(getbits());
-    auto getreg{[&](assembler::bits regs) {
-        return assembler::getreg([&] -> assembler::regs {
-            if (b.a) {
-                if (b.b) {
-                    if (b.c) {
-                        if (!b.d) return assembler::d_temp;
-                    } else return assembler::c_temp;
-                } else return assembler::b_temp;
-            } else return assembler::a_temp;
-            error("expression error; please contact me", s.loc);
-            throw;
-        }(), regs);
-    }};
+pair<assembler, string> toasmrec(string f, expr s, btype b = {
+        {ax, false},
+        {bx, false},
+        {cx, false},
+        {dx, false},
+}) {
+    assembler res{::res.b};
+    res.vars = ::res.vars;
+    res.varstack = ::res.varstack;
 
-
-
-    auto getaddr{
-        [&](string u) {
-            string r;
-            if (res.getvar(u, r)) return r;
-            return d.find(u) == d.end() ? move(u) : d[u];
-        }
+    auto getreg{
+            [&]{
+                for (auto i : b) if(!i.second) return i.first;
+                throw "expression error; eboten kakayato";
+            }
     };
-    auto reg = getreg(res.b);
-    d[f] = reg;
-    vector<assembler> rr{};
-    typeof(b) nb = {
-            .a = reg == ax,
-            .b = reg == bx,
-            .c = reg == cx,
-            .d = reg == dx
-    };
-
-
-    for (auto& i: s.opers) {
-        if (i[0] == '-' && i[1] == 'r') {
-            pair<assembler, string> ar = btoasmrec(i, cs[i], b);
-            cs.erase(i);
-            i = ar.second;
-            b = {
-                    .a = i == ax,
-                    .b = i == bx,
-                    .c = i == cx,
-                    .d = i == dx
-            };
-            rr.push_back(ar.first);
-#define CHECK(a) if (i == "r"#a"x") return b.a
-
-            [&] -> bool & {
-                CHECK(a);
-                CHECK(b);
-                CHECK(c);
-                CHECK(d);
-                error("expression error; please contact me", s.loc);
-                throw;
-            }() = true;
-        }
-    }
-
-    for (auto i: [&] {
-        sort(rr.begin(), rr.end(), [](assembler a, assembler b) {
-            return a.ins.size() > b.ins.size();
-        });
-        return rr;
-    }())
-        res.addnew(i);
-
-    switch (hashh(s.op.c_str())) {
-        case hashh("+"): {
-            res.mov(reg, getaddr(s.opers[0]));
-            res.add(reg, getaddr(s.opers[1]));
-
-            break;
-        }
-        case hashh("-"): {
-            res.mov(reg, getaddr(s.opers[0]));
-            res.sub(reg, getaddr(s.opers[1]));
-
-            break;
-        }
-        case hashh("*"): {
-            res.mov(reg, getaddr(s.opers[0]));
-            res.imul(reg, getaddr(s.opers[1]));
-
-            break;
-        }
-        case hashh("/"): {
-            res.mov(reg, getaddr(s.opers[0]));
-            res.idiv(reg, getaddr(s.opers[1]));
-
-            break;
-        }
-        case hashh("new"): {
-            res.mov(reg, getaddr(s.opers[0]));
-            res.add(reg, getaddr(s.opers[1]));
-
-            break;
-        }
-        default: {
-            if (s.op == "")
-                //error("this operation is not yet available", s.loc);
-            if (s.islabel) res.label(s.op);
-            else res.addauto(s.op, s.opers);
-        }
-    }
-
-
-    //res.addnew("");
-    return {res, reg};
-}
-
-pair<assembler, string> toasmrec(string f, expr s, btype b) {
-    assembler res(getbits());
-    vector<assembler> rr = {};
 
     for (auto &i: s.opers) {
         if (i[0] == '-' && i[1] == 'r') {
             pair<assembler, string> ar = toasmrec(i, cs[i], b);
             cs.erase(i);
             i = ar.second;
-            b = {
-                    .a = i == ax || b.a,
-                    .b = i == bx || b.b,
-                    .c = i == cx || b.c,
-                    .d = i == dx || b.d
-            };
-            rr.push_back(ar.first);
+            b[ar.second] = true;
+            res.addnew(ar.first);
         }
     }
-    if (b.a&&b.b&&b.c&&b.d) error("expression error; contact me", s.loc);
-    for (auto i: [&] {
-        sort(rr.begin(), rr.end(), [](assembler a, assembler b) {
-            return a.ins.size() < b.ins.size();
-        });
-        return rr;
-    }())
-        res.addnew(i);
-
-
-    //всё что я понимаю это свич, кейс и брэйк
-    //бываит
     auto getaddr{
         [&](string u) {
             string r;
@@ -552,33 +611,14 @@ pair<assembler, string> toasmrec(string f, expr s, btype b) {
             return d.find(u) == d.end() ? move(u) : d[u];
         }
     };
-    auto getreg{[&](assembler::bits regs) {
-        return assembler::getreg([&] -> assembler::regs {
-            if (b.a) {
-                if (b.b) {
-                    if (b.c) {
-                        if (!b.d) return assembler::d_temp;
-                    } else return assembler::c_temp;
-                } else return assembler::b_temp;
-            } else return assembler::a_temp;
-            error("expression error; please contact me", s.loc);
-            throw;
-        }(), regs);
-    }};
+
     auto isreg{[&](string r){
         return r==ax||r==bx||r==cx||r==dx;
     }};
-    for(auto i : s.opers) {
-        if(isreg(i)) {
-            [&] -> bool& {
-                if(i == ax) return b.a;
-                if(i == bx) return b.b;
-                if(i == cx) return b.c;
-                if(i == dx) return b.d;
-            }() = false;
-        }
-    }
-    auto reg = getreg(res.b);
+
+    for (auto i : s.opers) if(isreg(i)) b[i] = false;
+
+    auto reg = getreg();
 
     switch (hashh(s.op.c_str())) {
         case hashh("+"): {
@@ -605,9 +645,33 @@ pair<assembler, string> toasmrec(string f, expr s, btype b) {
 
             break;
         }
-        case hashh("return"): {
-            res.mov(reg, getaddr(s.opers[0]));
+        case hashh("EReturn"): {
+            res.mov(ax, getaddr(s.opers[0]));
+            res.addauto("ret", {});
+            break;
+        }
+        case hashh("NRetPExpr"): {
+            res.mov(ax, getaddr(s.opers[0]));
 
+            break;
+        }
+        case hashh("use16"): {
+            res.addauto("use16", {});
+            ::res.mode(assembler::b16);
+            break;
+        }
+        case hashh("use32"): {
+            res.addauto("use32", {});
+            ::res.mode(assembler::b32);
+            break;
+        }
+        case hashh("use64"): {
+            res.addauto("use64", {});
+            ::res.mode(assembler::b64);
+            break;
+        }
+        case hashh("stack"): {
+            //res.stack(s.opers)
             break;
         }
 
@@ -619,15 +683,24 @@ pair<assembler, string> toasmrec(string f, expr s, btype b) {
             else res.addauto(s.op, s.opers);
         }
     }
-
     return {res, reg};
 }
 
 assembler toasm() {
+//    for (int i=0; i<8; ++i) res.stack("-R"s+to_string(i+8), 4, [&]{
+//        switch (res.b){
+//            case assembler::b16:
+//                return "word";
+//            case assembler::b32:
+//                return "dword";
+//            case assembler::b64:
+//                return "qword";
+//        }
+//        return "";
+//    }());
 
-
-    for (auto i: cs) {
-        res.addnew(toasmrec(i.first, i.second, {}).first);
+    for (int i = 0; i<cs.size(); ++i) {
+        res.addnew(toasmrec("-r"s+to_string(i), cs["-r"s+to_string(i)]).first);
         d.clear();
     }
     return res;
@@ -643,9 +716,6 @@ int main(int argc, char **argv) {
         flag(bin)
         flag(s)
         flag(bpp)
-        flag(b16)
-        flag(b32)
-        flag(b64)
 
         havefile = true;
         filename = argv[i];
@@ -654,13 +724,13 @@ int main(int argc, char **argv) {
         fprintf(stderr, "First parameter <file> is missing.");
         exit(1);
     }
-    res.b = getbits();
+    res.b = b;
     ifstream file(filename);
     char ch;
 
     while (file.get(ch)) code += ch;
 
-
+    ;
 
 
     //yy_switch_to_buffer();
@@ -676,18 +746,17 @@ int main(int argc, char **argv) {
     for (auto i: c)
         execTree(i); //пашел нахюй printf тупой; cout лучше
 
-    for (auto il: cs) {
-        auto i = &il;
-        if (i->second.islabel) {
-            cout << i->first << ": " << endl;
-            continue;
-        }
-
-        if (i->second.opers.size() == 2)
-            cout << i->first << " = " << i->second.opers[0] << " " << i->second.op << " " << i->second.opers[1] << endl;
-        else cout << i->first << " = " << i->second.op << " " << i->second.opers[0];
-    }
-
+//    for (auto il: cs) {
+//        auto i = &il;
+//        if (i->second.islabel) {
+//            cout << i->first << ": " << endl;
+//            continue;
+//        }
+//
+//        if (i->second.opers.size() == 2)
+//            cout << i->first << " = " << i->second.opers[0] << " " << i->second.op << " " << i->second.opers[1] << endl;
+//        else cout << i->first << " = " << i->second.op << " " << i->second.opers[0];
+//    }
     [&](assembler gg) {
         class {
         public:

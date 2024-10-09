@@ -24,8 +24,9 @@ vector<define> defs;
 vector<macros> macs;
 
 %}
-%locations
 
+%locations
+%pure-parser
 %token m_newline
 %token m_define
 %token m_libname
@@ -56,7 +57,11 @@ commands:
         }
         | commands m_sharp m_builtin m_libname m_newline
         {
-           code.replace(@2.first_column-1, @4.last_column - @2.first_column, builtins[$4]);
+            try {
+                code.replace(@2.first_column-1, @4.last_column - @2.first_column, builtins.at($4));
+            } catch(...) {
+                error("unknown built-in", @4);
+            }
         }
         | commands m_id
         {

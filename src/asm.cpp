@@ -7,11 +7,10 @@ using namespace std;
 class assembler {
 public:
     struct instype{string com; vector<string> ops; bool islabel = false;};
-
-    struct valsizepair {string val; int size;};
+    struct valsizepair {string val; int size; string prefix;};
     pmr::map<string, valsizepair> data{};
     pmr::map<string, valsizepair> vars{};
-    char prefix;
+    char prefix = ' ';
     int varstack = 0;
 
     pmr::map<string, bool> bookregs = {
@@ -95,6 +94,13 @@ public:
         throw;
     }
 
+    void mode(bits m) {
+        if (m == b16) prefix = ' ';
+        else if (m == b32) prefix = 'e';
+        else prefix = 'r';
+        b = m;
+    }
+
     assembler(bits mode) {
         if (mode == b16) prefix = ' ';
         else if (mode == b32) prefix = 'e';
@@ -102,10 +108,8 @@ public:
         b = mode;
     };
 
-
-
-    void stack(const string& name, int size) {
-        vars[name] = {string{"["} + (prefix == ' ' ? string{""} : string{prefix}) + "bp" + '-' + to_string(size+varstack) + ']', size};
+    void stack(const string& name, int size, string p = "") {
+        vars[name] = {string{"["} + (prefix == ' ' ? string{""} : string{prefix}) + "bp" + '-' + to_string(size+varstack) + ']', size, {p}};
         varstack += size;
     }
 
@@ -118,10 +122,9 @@ public:
         ins.push_back({com, ops});
     }
 
-    void addnew(const assembler& coms, bool back = false) {
+    void addnew(const assembler& coms) {
         for (const auto& i : coms.ins) {
-            if (back) ins.insert(ins.begin(), i);
-            else ins.push_back(i);
+            ins.push_back(i);
         }
         vars.insert(coms.vars.begin(), coms.vars.end());
         varstack += coms.varstack;
@@ -170,18 +173,7 @@ public:
             for (string ii : i.ops) temp += ii + (ii == i.ops.back() ? "" : ", ");
             res += (i.islabel ? "" : "    ") + i.com + ' ' + temp + '\n';
         }
-        /*
-         * format PE console
-entry main
-use32
-
-; ========== CODE SECTION ==========
-section '.text' code readable executable
-         */
-        return "format PE console\nentry main\nsection '.text' executable\nuse"s+to_string(getint(b)*8)+R"(
-
-
-)"+res+"    ret";
+        return res;
     }
 
     bool getvar(string var, string& res) {
@@ -189,7 +181,7 @@ section '.text' code readable executable
         for(auto& i : vars) {
             if (i.first == var) {
                 g = false;
-                res = (i.second.val);
+                res = i.second.prefix+i.second.val;
             }
         }
         if (g) res = (var);
@@ -242,24 +234,24 @@ section '.text' code readable executable
 };
 
 #ifndef lib
-int main() {
-    assembler test(assembler::bits::b16);
-    test.stack("-a", 4);
-    test.stack("-b", 1);
-
-    assembler test2{test};
-    test2.stack("-c", 2);
-    test2.stack("-d", 1);
-
-    test2.mov("-a", "-b");
-    test2.add("-a", "-c");
-    test2.imul("-d", "rax");
-
-    test.addnew(test2);
-    test.label("main");
-
-    cout << test.tostring();
-}
+//int main() {
+//    assembler test(assembler::bits::b16);
+//    test.stack("-a", 4);
+//    test.stack("-b", 1);
+//
+//    assembler test2{test};
+//    test2.stack("-c", 2);
+//    test2.stack("-d", 1);
+//
+//    test2.mov("-a", "-b");
+//    test2.add("-a", "-c");
+//    test2.imul("-d", "rax");
+//
+//    test.addnew(test2);
+//    test.label("main");
+//
+//    cout << test.tostring();
+//}
 
 
 

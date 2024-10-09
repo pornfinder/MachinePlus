@@ -1,3 +1,5 @@
+
+
 vector<string> _split(string str, char separator = '\n');
 void error(string err, string file, YYLTYPE _pos) {
 
@@ -33,32 +35,4 @@ vector<string> _split(string str, char separator) {
     }
     if (strings.size() == 0) strings.push_back(str);
     return strings;
-}
-#ifndef lib
-#endif
-#ifdef lib
-
-
-
-
-enum token {
-
-};
-
-#endif
-
-#if false
-static void incrLine(int num) {Position.first_line += num;}
-static int line() {return Position.first_line;}
-static void incrColumn(int num) {Position.first_column += num; Position.last_column += num;}
-static void dropColumn() {Position.first_column = 0; Position.last_column = 0;}
-static int column() {return Position.first_column;}
-#endif
-static void printLexeme(const char * tokName)
-{
-    printf("%s, \"%s\", tester.mp:%d:%d\n",
-           tokName,
-           yytext,
-           yylloc.first_line,
-           yylloc.first_column - yyleng);;
 }

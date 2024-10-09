@@ -1,54 +1,49 @@
 #define YYSTYPE string
 
 #ifndef lib
+
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <map>
 
 using namespace std;
+string filename = "tester.mp";
+ofstream out{"tester.mpp"};
+string code;
 
 #endif
-
-#include "prepgram.h"
-#define YYERROR_VERBOSE
-
-void error(string err, YYLTYPE _pos);
-void error(string err, string file, YYLTYPE _pos);
-
-template<typename T> inline vector<T> stop(vector<T> obj = {0}){
-    return obj;
-}
-
 map<string, string> builtins = {
-        {"<WinEF32B>",
-         R"(
-format PE console
-entry main
-section '.text' executable
-use32)"},
-
-        {"<WinEF64B>",
-         R"(
-format PE console
-entry main
-section '.text' executable
-use64)"},
-
-        {"<BiosRBF16B>",
-         R"(
-use16)"}
+        {"<WinEF16B>",   "..format PE console\n..entry main\n..section '.text' executable\n#bits 16"},
+        {"<WinEF32B>",   "..format PE console\n..entry main\n..section '.text' executable\n#bits 32"},
+        {"<WinEF64B>",   "..format PE console\n..entry main\n..section '.text' executable\n#bits 64"},
+        {"<BiosRBF16B>", "#bits 16"},
+        {"<BiosRBF32B>", "#bits 32"},
+        {"<BiosRBF64B>", "#bits 64"}
 };
 
-string filename = "tester.mp";
-string code;
+#include "prepgram.h"
+
+#ifndef lib
+
+#include "res.cpp"
+
+#endif
+#define YYERROR_VERBOSE
 
 #include "prep.cpp"
 #include "prepgram.cpp"
 
-#include "res.cpp"
+void error(string err, YYLTYPE _pos);
 
-int main() {
+void error(string err, string file, YYLTYPE _pos);
+
+template<typename T>
+inline vector<T> stop(vector<T> obj = {0}) {
+    return obj;
+}
+
+int masin() {
     ifstream f(filename);
     char ch;
 

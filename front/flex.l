@@ -39,17 +39,18 @@ typeof                  { return t_gettype; }
 joker                   { return t_meme; }
 
 data                    { return t_reserve; }
-bs                      { return t_noreserve; }
+bss                     { return t_noreserve; }
 register                { return t_fast; }
 stack                   { return t_stack; }
 locate                  { return t_locate; }
 immortal                { return t_immortal; }
 
+struct                  { return t_struct; }
+
 void                    { return t_void; }
 auto                    { return t_auto; }
 
-bytes                   { return t_bytes; }
-sbytes                  { return t_sbytes; }
+#                       { return t_sharp; }
 bits                    { return t_bits; }
 
 asm                     { return t_asm; }
@@ -86,7 +87,9 @@ asm                     { return t_asm; }
 "<<"                    { return t_rshift; }
 "$"                     { return t_spec; }
 
-"..."                   { return t_any; }
+"//".*\n                {  }
+"/"\*.*\*"/"            {  }
+
 "::"                    { return t_nsget; }
 "namespace"             { return t_namespace; }
 
@@ -100,9 +103,7 @@ asm                     { return t_asm; }
                           if (std::count(tnames.begin(), tnames.end(), string{yytext})) return t_tname; return t_id;}
 
 \\\X                    { return t_screening; }
-
-
-"#line"                 { return t_line; }
+"..".*\n                 { yylval = newnode(acs, (yytext)); return t_any; }
 
 . { error("unknown symbol", yylloc);}
 
