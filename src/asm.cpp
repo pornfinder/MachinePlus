@@ -1,20 +1,37 @@
 #include <iostream>
-#include <map>
 #include <vector>
+#include <map>
+#include <string> // Make sure to include this for string operations
+#include <stdexcept> // For exceptions like runtime_error
 
 using namespace std;
 
+string getprefix(int b) {
+    switch(b){
+        case 1:
+            return "byte";
+        case 2:
+            return "word";
+        case 4:
+            return "dword";
+        case 8:
+            return "qword";
+    }
+    throw;
+}
+
 class assembler {
 public:
-    struct instype{string com; vector<string> ops; bool islabel = false;};
+    struct instype{string com; vector<string> ops; bool islabel = false; string msg;};
     struct valsizepair {string val; int size; string prefix;};
-    pmr::map<string, valsizepair> data{};
-    pmr::map<string, valsizepair> vars{};
+    map<string, valsizepair> data{};
+    map<string, valsizepair> vars{};
     char prefix = ' ';
     int varstack = 0;
+    string end = "";
 
-    pmr::map<string, bool> bookregs = {
-        {"", true}
+    map<string, bool> bookregs = {
+            {"", true}
     };
 
 
@@ -78,7 +95,7 @@ public:
             case _stack: {
                 switch (bit) {
                     case b8:
-                        throw;
+                        throw runtime_error("8-bit stack access not supported"); // Stack access is usually word aligned
                     case b16:
                         return "bp";
                     case b32:
@@ -88,10 +105,10 @@ public:
                 }
             }
             case _auto: {
-                throw;
+                throw runtime_error("Auto register selection not implemented");
             }
         }
-        throw;
+        throw runtime_error("Invalid register type or bit size");
     }
 
     void mode(bits m) {
@@ -104,22 +121,44 @@ public:
     assembler(bits mode) {
         if (mode == b16) prefix = ' ';
         else if (mode == b32) prefix = 'e';
-        else prefix = 'r';
+        else prefix = 'e';
         b = mode;
     };
 
-    void stack(const string& name, int size, string p = "") {
-        vars[name] = {string{"["} + (prefix == ' ' ? string{""} : string{prefix}) + "bp" + '-' + to_string(size+varstack) + ']', size, {p}};
+    void stack(const string& name, int size, string v, string p = "") {
         varstack += size;
+        vars[name] = {"["s + (prefix == ' ' ? ""s : string{prefix}) + "bp" + '-' + to_string(varstack) + "]", size, {p}};
+
+        mov(p+vars[name].val, v);
     }
 
-    void addauto(const string op, const vector<string>& ops) {
-        if (ops.size() == 2) binary(ops[0], ops[1], op);
-        else addnew(op, ops);
+    void reserve(const string& name, int size, string v, string p = "") {
+        end += (name+":"+" d"+[&]{switch(size){
+            case 1:
+                return "b";
+            case 2:
+                return "w";
+            case 4:
+                return "d";
+            case 8:
+                return "q";
+            default:
+                throw "iдi лєсом";
+        }}()+" "+v) + "\n";
+        vars[name] = {name, size, p};
     }
 
-    void addnew(const string& com, const vector<string>& ops) {
-        ins.push_back({com, ops});
+    void addauto(string op, vector<string> ops, string msg = "") {
+        op = align(op);
+        for (auto& i : ops) {
+            i = getvar(i);
+        }
+        if (ops.size() == 2) binary(ops[0], ops[1], op, msg);
+        else addnew(op, ops, msg);
+    }
+
+    void addnew(const string& com, const vector<string>& ops, string msg = "") {
+        ins.push_back({com, ops, .msg = msg});
     }
 
     void addnew(const assembler& coms) {
@@ -127,15 +166,16 @@ public:
             ins.push_back(i);
         }
         vars.insert(coms.vars.begin(), coms.vars.end());
+        end += coms.end;
         varstack += coms.varstack;
     }
 
-    void label(const string& lab) {
-        ins.push_back({lab+":", {}, true});
+    void label(const string& lab, string msg = "") {
+        ins.push_back({lab+":", {}, true, msg});
     }
 
-    void addnew(const string& com) {
-        ins.push_back({com, {}});
+    void addnew(const string& com, string msg = "") {
+        ins.push_back({com, {}, .msg = msg});
     }
 
     static int getint(bits bit) {
@@ -162,16 +202,33 @@ public:
                 return b32;
             case 8:
                 return b64;
-            default: return b8;
+            default: return b8; // Default to byte if size is unknown
         }
     }
 
     string tostring() {
         string res = "";
         for (auto i : ins) {
+            if (i.com == "sub  ") {
+                cout;
+            }
             string temp = "";
-            for (string ii : i.ops) temp += ii + (ii == i.ops.back() ? "" : ", ");
-            res += (i.islabel ? "" : "    ") + i.com + ' ' + temp + '\n';
+            bool rr = true;
+            for (string ii : i.ops) {
+                temp += (!rr ? ", " : "") + ii;
+                rr = false;
+            }
+
+            auto t = (i.islabel ? "" : "    ") + i.com + ' ' + temp;
+            t = align(t, 40);
+            if (!i.msg.empty()) t += " ; "s + i.msg;
+            t += "\n";
+            res += t;
+        }
+
+        res+="\n";
+        for (auto i : end) {
+            res+=i;
         }
         return res;
     }
@@ -181,55 +238,106 @@ public:
         for(auto& i : vars) {
             if (i.first == var) {
                 g = false;
-                res = i.second.prefix+i.second.val;
+                res = i.second.val;
             }
         }
         if (g) res = (var);
         return !g;
     }
 
-    string align(const string& in) {
-        return in + string(4-in.size(), ' ');
+    string getvar(string var) {
+        string res;
+        getvar(var, res);
+        return res;
     }
 
-    void binary(string dest, string src, string op, bool revertlast = false) {
-        if (dest == "-a*") dest = getreg(a_temp, getbit(vars[src].size));
-        else if (src == "-a*") src = getreg(a_temp, getbit(vars[dest].size));
-        else if (dest == "-b*") dest = getreg(b_temp, getbit(vars[src].size));
-        else if (src == "-b*") src = getreg(b_temp, getbit(vars[dest].size));
+    string align(const string& in, int s = 4) {
+        return in + (in.size()>=s ? "" : string(s-in.size(), ' '));
+    }
+
+    // Helper function to determine the size of an operand
+    int getOperandSize(const string& operand) {
+        for (const auto& varEntry : vars) {
+            if (varEntry.second.val == operand) {
+                return varEntry.second.size;
+            }
+        }
+        return 0; // Unknown size
+    }
+
+    void binary(string dest, string src, string op, string msg = "", bool revertlast = false) {
+        int destSize = getOperandSize(dest);
+        int srcSize = getOperandSize(src);
 
         string sa, sb;
         bool a = getvar(dest, sa), b = getvar(src, sb);
-        if(sa == sb) return;
-        if (a&&b) {
-            addnew(align("mov"), {getreg(a_temp, getbit(vars[src].size)), sb});
-            if (!revertlast) addnew(align(op), {sa, getreg(a_temp, getbit(vars[src].size))});
-            else addnew(align(op), {getreg(a_temp, getbit(vars[src].size)), sa});
+
+        if (a && b) {
+            // Both operands are variables
+            string reg = getreg(a_temp, getbit(srcSize));  // Get a temporary register
+
+            mov(reg, sb); // Load src into the register
+
+            if (!revertlast) {
+                addnew(align(op), {sa, reg}, msg); // Perform the operation
+            } else {
+                addnew(align(op), {reg, sa}, msg); // Reversed operands
+            }
+
+        } else {
+            // At least one operand is not a variable
+            addnew(align(op), {sa, sb}, msg);  // Perform operation directly (registers, immediate values)
         }
-        else {
-            addnew(align(op), {sa, sb});
+    }
+
+
+    void mov(string dest, string src, string msg = "") {
+        if (dest == src) return;
+        binary(dest, src, "mov", msg);
+    }
+
+    void add(string dest, string src, string msg = "") {
+        binary(dest, src, "add", msg, true);
+    }
+
+    void sub(string dest, string src, string msg = "") {
+        binary(dest, src, "sub", msg, true);
+    }
+
+    void imul(string dest, string src, string msg = "") {
+        binary(dest, src, "imul", msg, true);
+    }
+
+    void idiv(string dest, string msg = "") {
+        //Handle dividend
+        if (dest.find("ax") == string::npos) {
+            if (getOperandSize(dest) != 0)
+                mov("rax", dest);
+            else
+                mov("rax", dest.insert(0, "e"));
 
         }
+
+        //handle sing extend
+        addnew("cqo", vector<string>{}, msg);
+        addnew("idiv", vector<string>{"rax"}, msg);
     }
 
-    void mov(string dest, string src) {
-        binary(dest, src, "mov");
+    void push(string src, string msg = ""){
+        addauto("push", {src}, msg);
     }
 
-    void add(string dest, string src) {
-        binary(dest, src, "add", true);
+    void pop(string src, string msg = ""){
+        addauto("pop", {src}, msg);
     }
 
-    void sub(string dest, string src) {
-        binary(dest, src, "sub", true);
+    //Added code
+    void cqo(string msg = ""){
+        addauto("cqo", {}, msg);
     }
 
-    void imul(string dest, string src) {
-        binary(dest, src, "imul", true);
-    }
-
-    void idiv(string dest, string src) {
-        binary(dest, src, "idiv", true);
+    void call(string src, string msg = "") {
+        addauto("call", {src}, msg);
     }
 };
 

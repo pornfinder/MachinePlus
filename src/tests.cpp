@@ -17,30 +17,17 @@ assembler::bits getsize(string s) {
 
 struct Elementary {
     string name;
-    int address;
-    int size;
+    string type;
+    bool isbuiltin;
+    unsigned address;
+    unsigned size;
 };
 
 struct type {
     string name = "";
 
     map<string, type> values;
-    unsigned size = [&]() -> unsigned {
-        this->isbuiltin = [&]() -> bool{
-            try {
-                return getsize(this->name) + 1;
-            } catch(...) {
-                return false;
-            }
-        }();
-        if (!this->isbuiltin) {
-            for (auto i: this->values) {
-                this->size += i.second.size;
-            }
-            return this->size;
-        }
-        else return assembler::getint(getsize(name));
-    }();
+    unsigned size = resetsize().size;
     bool isbuiltin;
 
     /*
@@ -51,6 +38,11 @@ struct type {
      *     } c;
      * }
      *
+     * | d
+     *   | a
+     *   | c
+     *     | b
+     *
      * | d:
      * | - {a, 4};
      * | - {c, 8} - {b, 8}
@@ -58,21 +50,70 @@ struct type {
      * {[имя элемента], [адрес]}
      * */
 
-    vector<Elementary> getElementary(){
-
+    type resetsize() {
+        this->isbuiltin = [&]() -> bool {
+            try {
+                return assembler::getint(::getsize(this->name));
+            } catch (...) {
+                return false;
+            }
+        }();
+        if (!this->isbuiltin) {
+            for (auto i: this->values) {
+                this->size += i.second.size;
+            }
+        } else {
+            this->size = assembler::getint(::getsize(name));
+        }
+        return *this;
     }
 
-    vector<vector<Elementary>> getElementaries() {
+    pair<vector<vector<Elementary>>&, int&> getElementaries_raw(string valname = "", vector<Elementary> path = {}) {
+        static vector<vector<Elementary>> res{};
         static int address = 0;
-        vector<vector<Elementary>> res = {};
+        path.push_back(Elementary{valname, name, isbuiltin, !isbuiltin ? unsigned(address+size) : unsigned(address+=size), size});
+        res.push_back(path);
         for (auto i : values) {
-            res.push_back(getElementary());
+            i.second.getElementaries_raw(i.first, path);
         }
+
+        return {res, address};
+    }
+
+    vector<vector<Elementary>> getElementaries(string valname) {
+        auto r = getElementaries_raw(valname);
+        auto re = r.first;
+        r.first = {};
+        r.second = {};
+        return re;
     }
 };
-
+auto test = long{1} * long{8};
 int main() {
-    type i = type{"int"};
-    type u = {"cucumber", {{"i", i}}};
-    cout << i.size;
+    type _int{"int"};
+    type i{"ss", {{"a", _int}, {"b", _int}}};
+    type u{"cucumber", {{"i", i}}};
+
+    /*
+     * struct u{
+     *     struct ss{
+     *         int a;
+     *         int b;
+     *     } i;
+     * }
+     *
+     * u
+     * u ss
+     * u ss int
+     * u ss int
+     *
+     * */
+
+    for(auto i: u.getElementaries("var")){
+        for (auto ii : i) {
+            cout << " { name " << ii.name << "; type " << ii.type << "; isbuiltin " << (ii.isbuiltin ? "true" : "false") << "; address " << ii.address << "; size " << ii.size << "} ";
+        }
+        cout << endl;
+
+    }
 }

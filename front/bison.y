@@ -115,6 +115,7 @@ void yyerror(char const * msg, YYLTYPE loc)
 %right t_not euplus euminus egetaddr egoaddr
 %left t_member t_ptrmember esqexpr ecall etypeof
 
+%no-lines
 
 %%
 commands: /* empty */
@@ -130,21 +131,23 @@ commands: /* empty */
         | error t_semi
         ;
 
-type_expr: t_rb_o type_expr t_rb_c              { $$ = $2; }
-         | t_tname                              { $$ = $1; }
-         | t_struct t_fb_o structbody t_fb_c    {  }
-         | t_gettype t_rb_o expr t_rb_c         { yyerror("typeof is not supported"); $$ = newnode(gettype, (copy(&$3))); }
-         | t_gettype t_rb_o t_rb_c              { yyerror("expected expression before ')' token");}
+type_expr: t_rb_o type_expr t_rb_c                      { $$ = $2; }
+         | t_tname                                      { $$ = newnode(_struct, (types[$1.id->value])); }
+         | t_struct t_fb_o structbody t_fb_c            { $$ = newnode(_struct, (convertToType(*$3.body))); printElementary($$._struct->t.getElementaries("")); }
+         | t_struct t_id t_fb_o structbody t_fb_c       { $$ = newnode(_struct, (convertToType(*$4.body, $2.id->value))); printElementary($$._struct->t.getElementaries("")); types[$2.id->value] = $$._struct->t}
+         | t_gettype t_rb_o expr t_rb_c                 { yyerror("typeof is not supported"); $$ = newnode(gettype, (copy(&$3))); }
+         | t_gettype t_rb_o t_rb_c                      { yyerror("expected expression before ')' token");}
          ;
 
-structbody: structbody t_comm
-          | structbody var_decl t_comm
+structbody:                                     { $$ = newnode(body, ()); }
+          | structbody t_semi                   {}
+          | structbody var_decl t_semi          { $$.body->body.push_back(node{_var_decl, yylloc, .var_decl = $2.var_decl}); }
           ;
 
-fun_decl: flags type_expr t_id t_rb_o fun_params t_rb_c                         {$$ = newnode(fun_decl, (*$1.flags, copy(&$2), *$3.id, *$5.fun_args));};
-fun_defn: flags type_expr t_id t_rb_o fun_params t_rb_c body                    {$$ = newnode(fun_defn, (*$1.flags, copy(&$2), *$3.id, *$5.fun_args, *$7.body));};
-var_decl: flags type_expr t_id                                                  {$$ = newnode(var_decl, (*$1.flags, copy(&$2), *$3.id));};
-var_defn: flags type_expr t_id t_assign expr                                    {$$ = newnode(var_defn, (*$1.flags, copy(&$2), *$3.id, copy(&$5)));};
+fun_decl: flags type_expr t_id t_rb_o fun_params t_rb_c                         {$$ = newnode(fun_decl, (*$1.flags, $2._struct->t, *$3.id, *$5.fun_args, type::func($2._struct->t, toTCA(*$5.fun_args))));};
+fun_defn: flags type_expr t_id t_rb_o fun_params t_rb_c body                    {$$ = newnode(fun_defn, (*$1.flags, $2._struct->t, *$3.id, *$5.fun_args, *$7.body, type::func($2._struct->t, toTCA(*$5.fun_args))));};
+var_decl: flags type_expr t_id                                                  {$$ = newnode(var_decl, (*$1.flags, $2._struct->t, *$3.id));};
+var_defn: flags type_expr t_id t_assign expr                                    {$$ = newnode(var_defn, (*$1.flags, $2._struct->t, *$3.id, copy(&$5)));};
 
 
 flags:                      { $$ = newnode(flags, ()); }
@@ -168,6 +171,7 @@ pos: t_rb_o t_id t_rb_c             { $$ = newnode(pos, (.id = $2.id->value)); }
    ;
 
 bits: t_sharp t_bits t_num { $$ = newnode(bitmode, (atoi($3.num->value.c_str())));}
+    ;
 
 command: fun_decl t_semi    {c.push_back($1);}
        | fun_defn           {c.push_back($1);}
@@ -187,12 +191,10 @@ fun_param: var_decl { $$ = $1; }
          ;
 
 mbsbody: body           { $$ = $1; }
-       | expr t_semi    { $$ = $1; }
+       | bodycom        { $$ = $1; }
        ;
 
 body: t_fb_o bodycoms t_fb_c { $$ = $2 }
-    | t_fb_o t_fb_c          { $$ = newnode(body, ()); }
-    | error                  { yyerror("invalid body"); $$ = *null; }
     ;
 
 bodycoms: bodycom                   { $$ = newnode(body, ({$1})); }
@@ -207,12 +209,14 @@ fun_args: expr                  { $$ = newnode(args, ({copy(&$1)})); }
 
 aid: t_id       { $$ = $1; }
    | t_tname    { $$ = $1; }
+   ;
 
 asm: t_lshift asmcom t_semi { $$ = $2; }
    | t_any                  { $$ = $1; }
    ;
 
 asmcom: aid fun_args       { $$ = newnode(ac, ( *$1.id, *$2.args )) }
+      ;
 
 bodycom: var_decl t_semi            { $$ = $1; }
        | var_defn t_semi            { $$ = $1; }
@@ -221,7 +225,6 @@ bodycom: var_decl t_semi            { $$ = $1; }
        | expr t_semi                { $$ = $1; }
        | asm                        { $$ = $1; }
        | error t_semi               { yyerror("invalid expression"); $$ = *null; }
-
        ;
 
 expr: t_rb_o expr t_rb_c                { $$ = $2; }
@@ -234,6 +237,5 @@ expr: t_rb_o expr t_rb_c                { $$ = $2; }
     | expr t_assign expr                { $$ = newnode(assign, (copy(&$1), copy(&$3))); }
     | t_num                                             { $$ = $1; }
     | t_id                                              { $$ = $1; }
-    | error                                             { yyerror("invalid expression"); $$ = *null; }
     ;
 %%

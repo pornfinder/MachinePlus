@@ -28,7 +28,6 @@ nv [^a-zA-Z_0-9+\-*/><!;,=(){}\[\]&|'" \n\t]
 [ \t\r\n]+              { }
 
 if                      { return t_if; }
-"else if"               { return t_elseif; }
 else                    { return t_else; }
 inf                     { return t_inf; }
 break                   { return t_break; }
@@ -97,13 +96,13 @@ asm                     { return t_asm; }
 \'.\'                   { return t_char; }
 \".*\"                  { return t_string; }
 
-{num}                    { yylval = newnode(num, (string{yytext}));
+{num}                    { yylval = newnodeL(num, (string{yytext}));
                           return t_num; }
-{id}                    { yylval = newnode(id, (string{yytext}));
-                          if (std::count(tnames.begin(), tnames.end(), string{yytext})) return t_tname; return t_id;}
+{id}                    { yylval = newnodeL(id, (string{yytext}));
+                          if (types.count(string{yytext})) return t_tname; return t_id;}
 
 \\\X                    { return t_screening; }
-"..".*\n                 { yylval = newnode(acs, (yytext)); return t_any; }
+"..".*\n                 { yylval = newnodeL(acs, (yytext)); return t_any; }
 
 . { error("unknown symbol", yylloc);}
 
